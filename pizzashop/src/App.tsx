@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ProductDetailPage } from './pages/store/ProductDetailPage';
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
