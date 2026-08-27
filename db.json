@@ -1,0 +1,64 @@
+{
+  "tenant": {
+    "id": "tenant-1",
+    "name": "Pizzaria Bella Napoli",
+    "logoUrl": "https://placehold.co/120x120/c0392b/ffffff?text=BN",
+    "primaryColor": "#c0392b",
+    "secondaryColor": "#272b33",
+    "address": "Rua das Palmeiras, 245 - Centro, Manaus - AM",
+    "openingHours": "18h às 23h30, todos os dias",
+    "deliveryFee": 6.5,
+    "deliveryRadiusKm": 8,
+    "avgPrepTimeMin": 35,
+    "enabledPaymentMethods": ["pix", "cartao", "dinheiro"]
+  },
+  "products": [
+    {
+      "id": "1",
+      "name": "Calabresa",
+      "description": "Molho, mussarela, calabresa fatiada, cebola e orégano",
+      "imageUrl": "https://placehold.co/400x280/c0392b/fff8f0?text=Calabresa",
+      "basePrice": 39.9,
+      "category": "salgada",
+      "availableSizes": ["P", "M", "G"],
+      "availableToppings": [
+        { "id": "t1", "name": "Borda recheada", "price": 8 },
+        { "id": "t2", "name": "Bacon extra", "price": 6 }
+      ]
+    },
+    {
+      "id": "2",
+      "name": "Margherita",
+      "description": "Molho, mussarela de búfala, tomate e manjericão fresco",
+      "imageUrl": "https://placehold.co/400x280/c0392b/fff8f0?text=Margherita",
+      "basePrice": 42.5,
+      "category": "salgada",
+      "availableSizes": ["M", "G"],
+      "availableToppings": [{ "id": "t1", "name": "Borda recheada", "price": 8 }]
+    },
+    {
+      "id": "3",
+      "name": "Quatro Queijos",
+      "description": "Mussarela, provolone, parmesão e gorgonzola",
+      "imageUrl": "https://placehold.co/400x280/c0392b/fff8f0?text=4+Queijos",
+      "basePrice": 44.9,
+      "category": "salgada",
+      "availableSizes": ["P", "M", "G"],
+      "availableToppings": [
+        { "id": "t1", "name": "Borda recheada", "price": 8 },
+        { "id": "t3", "name": "Mel extra", "price": 3 }
+      ]
+    },
+    {
+      "id": "4",
+      "name": "Chocolate com Morango",
+      "description": "Chocolate ao leite, morangos frescos e granulado",
+      "imageUrl": "https://placehold.co/400x280/c0392b/fff8f0?text=Doce",
+      "basePrice": 36.0,
+      "category": "doce",
+      "availableSizes": ["P", "M"],
+      "availableToppings": []
+    }
+  ],
+  "orders": []
+}
