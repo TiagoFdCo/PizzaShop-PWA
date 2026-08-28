@@ -1,5 +1,5 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Palette, Pizza, ClipboardList, LogOut } from "lucide-react";
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { LayoutDashboard, Palette, Pizza, ClipboardList, LogOut, Store } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useTenantStore } from "../../store/useTenantStore";
 
@@ -24,7 +24,14 @@ export function AdminLayout() {
     <div className="flex min-h-screen bg-gray-50">
       <aside className="flex w-56 flex-col justify-between border-r border-gray-200 bg-white p-4">
         <div>
-          <p className="mb-6 px-2 text-sm font-semibold text-gray-400">{tenant?.name ?? "Painel Admin"}</p>
+          <p className="px-2 text-sm font-semibold text-gray-400">{tenant?.name ?? "Painel Admin"}</p>
+          <Link
+            to="/"
+            className="mb-6 mt-1 flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-primary hover:bg-primary/10"
+          >
+            <Store size={14} />
+            Voltar para a loja
+          </Link>
           <nav className="flex flex-col gap-1">
             {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
               <NavLink

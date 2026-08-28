@@ -2,29 +2,50 @@
   "tenant": {
     "id": "tenant-1",
     "name": "Pizzaria Bella Napoli",
+    "tagline": "Massa fermentada por 48h e forno a lenha, todos os dias.",
+    "aboutText": "Desde 2010 servindo pizzas artesanais no bairro Centro. Ingredientes selecionados, massa de longa fermentação e muito carinho em cada assada.",
     "logoUrl": "https://placehold.co/120x120/c0392b/ffffff?text=BN",
-    "primaryColor": "#c0392b",
+    "bannerUrl": "",
+    "primaryColor": "#008000",
     "secondaryColor": "#272b33",
     "address": "Rua das Palmeiras, 245 - Centro, Manaus - AM",
     "openingHours": "18h às 23h30, todos os dias",
+    "whatsapp": "(92) 99999-0000",
+    "instagram": "@bellanapoli",
     "deliveryFee": 6.5,
     "deliveryRadiusKm": 8,
     "avgPrepTimeMin": 35,
-    "enabledPaymentMethods": ["pix", "cartao", "dinheiro"]
+    "minOrderValue": 25,
+    "enabledPaymentMethods": [
+      "pix",
+      "cartao",
+      "dinheiro"
+    ]
   },
   "products": [
     {
-      "id": "1",
       "name": "Calabresa",
       "description": "Molho, mussarela, calabresa fatiada, cebola e orégano",
       "imageUrl": "https://placehold.co/400x280/c0392b/fff8f0?text=Calabresa",
-      "basePrice": 39.9,
       "category": "salgada",
-      "availableSizes": ["P", "M", "G"],
+      "availableSizes": [
+        "P",
+        "M",
+        "G"
+      ],
       "availableToppings": [
-        { "id": "t1", "name": "Borda recheada", "price": 8 },
-        { "id": "t2", "name": "Bacon extra", "price": 6 }
-      ]
+        {
+          "id": "t1",
+          "name": "Borda recheada",
+          "price": 8
+        },
+        {
+          "id": "t2",
+          "name": "Bacon extra",
+          "price": 6
+        }
+      ],
+      "id": "1"
     },
     {
       "id": "2",
@@ -33,8 +54,17 @@
       "imageUrl": "https://placehold.co/400x280/c0392b/fff8f0?text=Margherita",
       "basePrice": 42.5,
       "category": "salgada",
-      "availableSizes": ["M", "G"],
-      "availableToppings": [{ "id": "t1", "name": "Borda recheada", "price": 8 }]
+      "availableSizes": [
+        "M",
+        "G"
+      ],
+      "availableToppings": [
+        {
+          "id": "t1",
+          "name": "Borda recheada",
+          "price": 8
+        }
+      ]
     },
     {
       "id": "3",
@@ -43,10 +73,22 @@
       "imageUrl": "https://placehold.co/400x280/c0392b/fff8f0?text=4+Queijos",
       "basePrice": 44.9,
       "category": "salgada",
-      "availableSizes": ["P", "M", "G"],
+      "availableSizes": [
+        "P",
+        "M",
+        "G"
+      ],
       "availableToppings": [
-        { "id": "t1", "name": "Borda recheada", "price": 8 },
-        { "id": "t3", "name": "Mel extra", "price": 3 }
+        {
+          "id": "t1",
+          "name": "Borda recheada",
+          "price": 8
+        },
+        {
+          "id": "t3",
+          "name": "Mel extra",
+          "price": 3
+        }
       ]
     },
     {
@@ -54,9 +96,12 @@
       "name": "Chocolate com Morango",
       "description": "Chocolate ao leite, morangos frescos e granulado",
       "imageUrl": "https://placehold.co/400x280/c0392b/fff8f0?text=Doce",
-      "basePrice": 36.0,
+      "basePrice": 36,
       "category": "doce",
-      "availableSizes": ["P", "M"],
+      "availableSizes": [
+        "P",
+        "M"
+      ],
       "availableToppings": []
     }
   ],

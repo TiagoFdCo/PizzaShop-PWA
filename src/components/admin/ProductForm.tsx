@@ -1,10 +1,11 @@
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { productSchema, type ProductFormData } from "../../lib/validators";
 import type { Pizza, Size } from "../../types/product";
 import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
+import { ImageUploadField } from "./customization/ImageUploadField";
 
 const ALL_SIZES: Size[] = ["P", "M", "G"];
 
@@ -17,13 +18,14 @@ interface ProductFormProps {
 export function ProductForm({ initialData, onSubmit, onCancel }: ProductFormProps) {
   const {
     register,
+    control,
     handleSubmit,
     watch,
     setValue,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<ProductFormData>({
-    resolver: zodResolver(productSchema),
+    resolver: zodResolver(productSchema) as Resolver<ProductFormData>,
     defaultValues: { availableSizes: ["M"] },
   });
 
@@ -46,7 +48,21 @@ export function ProductForm({ initialData, onSubmit, onCancel }: ProductFormProp
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <Input label="Nome" {...register("name")} error={errors.name?.message} />
       <Input label="Descrição" {...register("description")} error={errors.description?.message} />
-      <Input label="URL da imagem" {...register("imageUrl")} error={errors.imageUrl?.message} />
+
+      <Controller
+        name="imageUrl"
+        control={control}
+        render={({ field }) => (
+          <ImageUploadField
+            label="Foto da pizza"
+            value={field.value ?? ""}
+            onChange={field.onChange}
+            error={errors.imageUrl?.message}
+            previewClassName="aspect-video w-32"
+            helperText="Foto quadrada ou 4:3 funciona melhor. Máx. 2MB."
+          />
+        )}
+      />
       <div className="grid grid-cols-2 gap-4">
         <Input
           type="number"
