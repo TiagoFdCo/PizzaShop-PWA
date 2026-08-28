@@ -1,9 +1,7 @@
-/// <reference types="vitest/config" />
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
@@ -25,7 +23,6 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // App shell + cardápio ficam disponíveis offline (modo leitura)
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.pathname.startsWith("/products") || url.pathname.startsWith("/tenant"),

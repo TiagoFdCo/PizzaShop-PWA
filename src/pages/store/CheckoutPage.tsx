@@ -20,7 +20,9 @@ export function CheckoutPage() {
 
   const enabledMethods = tenant?.enabledPaymentMethods ?? [];
   const deliveryFee = tenant?.deliveryFee ?? 0;
+  const minOrderValue = tenant?.minOrderValue ?? 0;
   const total = subtotal() + deliveryFee;
+  const belowMinOrder = subtotal() < minOrderValue;
 
   const {
     register,
@@ -33,7 +35,8 @@ export function CheckoutPage() {
 
   useEffect(() => {
     if (items.length === 0) navigate("/carrinho", { replace: true });
-  }, [items.length, navigate]);
+    else if (belowMinOrder) navigate("/carrinho", { replace: true });
+  }, [items.length, belowMinOrder, navigate]);
 
   async function onSubmit(data: CheckoutFormData) {
     await placeOrder({
@@ -47,7 +50,7 @@ export function CheckoutPage() {
     navigate("/pagamento");
   }
 
-  if (items.length === 0) return null;
+  if (items.length === 0 || belowMinOrder) return null;
 
   return (
     <div className="mx-auto max-w-2xl p-4">

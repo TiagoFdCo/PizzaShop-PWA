@@ -11,7 +11,10 @@ export function CartPage() {
   const tenant = useTenantStore((state) => state.tenant);
 
   const deliveryFee = tenant?.deliveryFee ?? 0;
+  const minOrderValue = tenant?.minOrderValue ?? 0;
   const total = subtotal() + deliveryFee;
+  const missingForMinOrder = Math.max(0, minOrderValue - subtotal());
+  const belowMinOrder = missingForMinOrder > 0;
 
   return (
     <div className="mx-auto max-w-2xl p-4">
@@ -85,7 +88,18 @@ export function CartPage() {
             </div>
           </div>
 
-          <Button className="mt-4 w-full" onClick={() => navigate("/checkout")}>
+          {belowMinOrder && (
+            <p className="mt-3 text-center text-sm text-amber-600">
+              Faltam {formatCurrency(missingForMinOrder)} para atingir o pedido mínimo de{" "}
+              {formatCurrency(minOrderValue)}.
+            </p>
+          )}
+
+          <Button
+            className="mt-4 w-full"
+            disabled={belowMinOrder}
+            onClick={() => navigate("/checkout")}
+          >
             Ir para Checkout
           </Button>
         </>
