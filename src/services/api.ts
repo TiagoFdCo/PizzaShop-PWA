@@ -32,5 +32,11 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
 
   // DELETE geralmente retorna corpo vazio
   const text = await res.text();
-  return (text ? JSON.parse(text) : undefined) as T;
+  if (!text) return undefined as T;
+
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new ApiError(`A API retornou uma resposta inválida para ${path}`, res.status);
+  }
 }

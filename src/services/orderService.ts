@@ -16,6 +16,8 @@ export async function createOrder(input: OrderInput): Promise<Order> {
     ...input,
     status: "recebido" as OrderStatus,
     createdAt: new Date().toISOString(),
+    cook: null,
+    driver: null,
   };
   return apiFetch<Order>(ENDPOINT, {
     method: "POST",

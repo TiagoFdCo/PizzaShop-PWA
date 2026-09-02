@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useForm, Controller, type Resolver } from "react-hook-form";
+import { useForm, Controller, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { productSchema, type ProductFormData } from "../../lib/validators";
 import type { Pizza, Size } from "../../types/product";
@@ -20,7 +20,6 @@ export function ProductForm({ initialData, onSubmit, onCancel }: ProductFormProp
     register,
     control,
     handleSubmit,
-    watch,
     setValue,
     reset,
     formState: { errors, isSubmitting },
@@ -32,10 +31,19 @@ export function ProductForm({ initialData, onSubmit, onCancel }: ProductFormProp
   useEffect(() => {
     if (initialData) {
       reset({ ...initialData });
+    } else {
+      reset({
+        name: "",
+        description: "",
+        imageUrl: "",
+        basePrice: 0,
+        category: "salgada",
+        availableSizes: ["M"],
+      });
     }
   }, [initialData, reset]);
 
-  const selectedSizes = watch("availableSizes") ?? [];
+  const selectedSizes = useWatch({ control, name: "availableSizes" }) ?? [];
 
   function toggleSize(size: Size) {
     const next = selectedSizes.includes(size)

@@ -8,15 +8,20 @@ interface ProductCardProps {
 
 export function ProductCard({ product, onSelect }: ProductCardProps) {
   return (
-    <button
-      onClick={() => onSelect(product.id)}
-      className="flex flex-col text-left rounded-xl border border-gray-200 overflow-hidden bg-white hover:shadow-card transition-shadow focus-visible:ring-2 focus-visible:ring-primary"
-    >
-      <img src={product.imageUrl} alt={product.name} className="w-full h-40 object-cover" loading="lazy" />
-      <div className="p-3">
-        <h3 className="font-semibold text-gray-900">{product.name}</h3>
-        <p className="text-sm text-gray-500 line-clamp-2">{product.description}</p>
-        <span className="block mt-2 font-bold text-primary">a partir de {formatCurrency(product.basePrice)}</span>
+    <button onClick={() => onSelect(product.id)} className="product-card-modern">
+      <div className="product-image-wrap">
+        <img src={product.imageUrl} alt={product.name} className="product-image" loading="lazy" />
+      </div>
+      <div className="product-body">
+        <h3 className="product-name">{product.name}</h3>
+        <p className="product-description line-clamp-2">{product.description}</p>
+        <div className="product-footer">
+          <div>
+            <div className="product-price-label">A partir de</div>
+            <span className="product-price">{formatCurrency(product.basePrice)}</span>
+          </div>
+          <span className="rounded-full bg-[#f8e3dc] px-3 py-1.5 text-xs font-bold text-[#a92822]">Escolher</span>
+        </div>
       </div>
     </button>
   );

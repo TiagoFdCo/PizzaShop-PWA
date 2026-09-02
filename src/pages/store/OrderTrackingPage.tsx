@@ -20,7 +20,7 @@ export function OrderTrackingPage() {
       </p>
 
       <div className="card mb-6">
-        <OrderStatusTracker status={order.status} />
+        <OrderStatusTracker status={order.status} deliveryFailure={order.deliveryFailure} />
       </div>
 
       <div className="card space-y-1 text-sm">
