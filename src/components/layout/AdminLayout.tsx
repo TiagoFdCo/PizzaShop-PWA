@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Palette, Pizza, ClipboardList, LogOut, Store } from "lucide-react";
+import { LayoutDashboard, Palette, Pizza, ClipboardList, Bike, LogOut, Store } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useTenantStore } from "../../store/useTenantStore";
 
@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { to: "/admin/customizacao", label: "Customização", icon: Palette },
   { to: "/admin/cardapio", label: "Cardápio", icon: Pizza },
   { to: "/admin/pedidos", label: "Pedidos", icon: ClipboardList },
+  { to: "/admin/entregadores", label: "Entregadores", icon: Bike },
 ];
 
 export function AdminLayout() {
@@ -24,7 +25,9 @@ export function AdminLayout() {
     <div className="flex min-h-screen bg-gray-50">
       <aside className="flex w-56 flex-col justify-between border-r border-gray-200 bg-white p-4">
         <div>
-          <p className="px-2 text-sm font-semibold text-gray-400">{tenant?.name ?? "Painel Admin"}</p>
+          <p className="px-2 text-sm font-semibold text-gray-400">
+            {tenant?.name ?? "Painel Admin"}
+          </p>
           <Link
             to="/"
             className="mb-6 mt-1 flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-primary hover:bg-primary/10"
@@ -39,7 +42,9 @@ export function AdminLayout() {
                 to={to}
                 className={({ isActive }) =>
                   `flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
-                    isActive ? "bg-primary/10 text-primary" : "text-gray-600 hover:bg-gray-100"
+                    isActive
+                      ? "bg-primary/10 text-primary"
+                      : "text-gray-600 hover:bg-gray-100"
                   }`
                 }
               >

@@ -1,11 +1,17 @@
-// src/main.tsx — ajuste o que já existe lá pra usar isso
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { AppRouter } from "./router";
+import App from "./App";
 import "./index.css";
+import "./design.css";
 
-createRoot(document.getElementById("root")!).render(
+const rootElement = document.getElementById("root");
+
+if (!rootElement) {
+  throw new Error("Elemento #root não encontrado.");
+}
+
+createRoot(rootElement).render(
   <StrictMode>
-    <AppRouter />
+    <App />
   </StrictMode>
 );
