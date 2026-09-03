@@ -1,18 +1,14 @@
-"""schema inicial
+﻿"""schema inicial
 
 Revision ID: 202608310001
 Revises:
 Create Date: 2026-08-31 00:00:01
-
-Escrita à mão (não gerada por autogenerate) porque o ambiente de dev não tem
-Postgres acessível neste momento. Antes de rodar de verdade, confira com
-`alembic upgrade head` contra um Postgres local — se algo divergir dos
-models, ajuste esta migration em vez de criar uma segunda por cima.
 """
 from typing import Sequence, Union
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 revision: str = "202608310001"
 down_revision: Union[str, None] = None
@@ -21,22 +17,43 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    staff_role = sa.Enum("admin", "cozinha", "entrega", name="staff_role")
-    order_status = sa.Enum(
-        "recebido", "preparo", "pronto_entrega", "saiu_para_entrega", "entregue", "falha_entrega",
-        name="order_status",
+    op.execute(
+        "DO $$ BEGIN "
+        "CREATE TYPE staff_role AS ENUM ('admin', 'cozinha', 'entrega'); "
+        "EXCEPTION WHEN duplicate_object THEN null; END $$;"
     )
-    payment_method = sa.Enum("pix", "cartao", "dinheiro", name="payment_method")
-    delivery_failure_reason = sa.Enum(
-        "cliente_ausente", "endereco_nao_encontrado", "cliente_recusou", "problema_veiculo", "outro",
-        name="delivery_failure_reason",
+    op.execute(
+        "DO $$ BEGIN "
+        "CREATE TYPE order_status AS ENUM "
+        "('recebido', 'preparo', 'pronto_entrega', 'saiu_para_entrega', 'entregue', 'falha_entrega'); "
+        "EXCEPTION WHEN duplicate_object THEN null; END $$;"
+    )
+    op.execute(
+        "DO $$ BEGIN "
+        "CREATE TYPE payment_method AS ENUM ('pix', 'cartao', 'dinheiro'); "
+        "EXCEPTION WHEN duplicate_object THEN null; END $$;"
+    )
+    op.execute(
+        "DO $$ BEGIN "
+        "CREATE TYPE delivery_failure_reason AS ENUM "
+        "('cliente_ausente', 'endereco_nao_encontrado', 'cliente_recusou', 'problema_veiculo', 'outro'); "
+        "EXCEPTION WHEN duplicate_object THEN null; END $$;"
     )
 
-    bind = op.get_bind()
-    staff_role.create(bind, checkfirst=True)
-    order_status.create(bind, checkfirst=True)
-    payment_method.create(bind, checkfirst=True)
-    delivery_failure_reason.create(bind, checkfirst=True)
+    staff_role = postgresql.ENUM(
+        "admin", "cozinha", "entrega", name="staff_role", create_type=False,
+    )
+    order_status = postgresql.ENUM(
+        "recebido", "preparo", "pronto_entrega", "saiu_para_entrega", "entregue", "falha_entrega",
+        name="order_status", create_type=False,
+    )
+    payment_method = postgresql.ENUM(
+        "pix", "cartao", "dinheiro", name="payment_method", create_type=False,
+    )
+    delivery_failure_reason = postgresql.ENUM(
+        "cliente_ausente", "endereco_nao_encontrado", "cliente_recusou", "problema_veiculo", "outro",
+        name="delivery_failure_reason", create_type=False,
+    )
 
     op.create_table(
         "tenant",
@@ -124,9 +141,7 @@ def upgrade() -> None:
     op.create_table(
         "order_item_topping",
         sa.Column("id", sa.String(length=36), primary_key=True),
-        sa.Column(
-            "order_item_id", sa.String(length=36), sa.ForeignKey("order_item.id", ondelete="CASCADE"), nullable=False
-        ),
+        sa.Column("order_item_id", sa.String(length=36), sa.ForeignKey("order_item.id", ondelete="CASCADE"), nullable=False),
         sa.Column("name", sa.String(length=120), nullable=False),
         sa.Column("price", sa.Float(), nullable=False),
     )
@@ -153,8 +168,7 @@ def downgrade() -> None:
     op.drop_table("staff")
     op.drop_table("tenant")
 
-    bind = op.get_bind()
-    sa.Enum(name="delivery_failure_reason").drop(bind, checkfirst=True)
-    sa.Enum(name="payment_method").drop(bind, checkfirst=True)
-    sa.Enum(name="order_status").drop(bind, checkfirst=True)
-    sa.Enum(name="staff_role").drop(bind, checkfirst=True)
+    op.execute("DROP TYPE IF EXISTS delivery_failure_reason")
+    op.execute("DROP TYPE IF EXISTS payment_method")
+    op.execute("DROP TYPE IF EXISTS order_status")
+    op.execute("DROP TYPE IF EXISTS staff_role")

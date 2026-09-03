@@ -1,7 +1,11 @@
-import { Suspense } from "react";
-import { RouterProvider } from "react-router-dom";
+﻿import { Suspense, lazy } from "react";
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { Spinner } from "./components/ui/Spinner";
 import { DriverGate } from "./components/DriverGate";
+import { RootLayout } from "./components/layout/RootLayout";
+import { StoreLayout } from "./components/layout/StoreLayout";
+import { AdminLayout } from "./components/layout/AdminLayout";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 // Loja
 const LandingPage = lazy(() =>
@@ -57,7 +61,7 @@ const DriverLoginPage = lazy(() =>
 const DriverOrdersPage = lazy(() =>
   import("./pages/driver/DriverOrdersPage").then((m) => ({ default: m.DriverOrdersPage }))
 );
-import { router } from "./routerConfig";
+//import { router } from "./routerConfig";
 
 function Fallback() {
   return <Spinner label="Carregando..." />;
@@ -102,7 +106,7 @@ export const router = createBrowserRouter([
           },
         ],
       },
-      // Entregador — mostra login se não autenticado, pedidos se autenticado
+      // Entregador â€” mostra login se nÃ£o autenticado, pedidos se autenticado
       {
         path: "/entrega",
         element: (
