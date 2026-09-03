@@ -11,8 +11,10 @@ interface OrdersTableProps {
 const STATUS_TONE: Record<OrderStatus, "neutral" | "success" | "warning" | "danger"> = {
   recebido: "neutral",
   preparo: "warning",
+  pronto_entrega: "warning",       // novo status P2
   saiu_para_entrega: "warning",
   entregue: "success",
+  falha_entrega: "danger",         // novo status P3
 };
 
 export function OrdersTable({ orders, onStatusChange }: OrdersTableProps) {
