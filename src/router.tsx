@@ -34,6 +34,14 @@ const AdminOrdersManagementPage = lazy(() =>
   import("./pages/admin/OrdersManagementPage").then((m) => ({ default: m.OrdersManagementPage }))
 );
 
+// Cozinha e Entrega (issue #45 — telas provisórias até P2/P3 entregarem as de verdade)
+const KitchenPlaceholderPage = lazy(() =>
+  import("./pages/kitchen/KitchenPlaceholderPage").then((m) => ({ default: m.KitchenPlaceholderPage }))
+);
+const DeliveryPlaceholderPage = lazy(() =>
+  import("./pages/delivery/DeliveryPlaceholderPage").then((m) => ({ default: m.DeliveryPlaceholderPage }))
+);
+
 function Fallback() {
   return <Spinner label="Carregando..." />;
 }
@@ -61,7 +69,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <AdminLoginPage /> },
           {
-            element: <ProtectedRoute />,
+            element: <ProtectedRoute allowedRoles={["admin"]} />,
             children: [
               {
                 element: <AdminLayout />,
@@ -75,6 +83,18 @@ export const router = createBrowserRouter([
             ],
           },
         ],
+      },
+      // Cozinha
+      {
+        path: "/cozinha",
+        element: <ProtectedRoute allowedRoles={["cozinha"]} redirectTo="/admin" />,
+        children: [{ index: true, element: <KitchenPlaceholderPage /> }],
+      },
+      // Entrega
+      {
+        path: "/entrega",
+        element: <ProtectedRoute allowedRoles={["entrega"]} redirectTo="/admin" />,
+        children: [{ index: true, element: <DeliveryPlaceholderPage /> }],
       },
     ],
   },
