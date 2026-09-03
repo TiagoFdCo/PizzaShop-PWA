@@ -38,23 +38,22 @@ export function MenuPage() {
     );
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Cardápio</h1>
+    <div className="menu-page">
+      <div className="menu-heading"><div><div className="menu-kicker">Feito na hora</div><h1 className="menu-title">Nosso cardápio</h1></div>
 
-      <input
+      <div className="menu-search"><input
         type="text"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Buscar pizza pelo nome..."
-        className="w-full border rounded-lg px-3 py-2 mb-4"
-      />
+        placeholder="Buscar sua pizza..." className="w-full px-4 py-2.5" />
+      </div></div>
 
-      <ProductFilters categories={categories} selected={category} onChange={setCategory} />
+      <div className="mb-5"><ProductFilters categories={categories} selected={category} onChange={setCategory} /></div>
 
       {filtered.length === 0 ? (
         <p className="text-gray-500">Nenhuma pizza encontrada.</p>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="menu-grid">
           {filtered.map((product) => (
             <ProductCard
               key={product.id}

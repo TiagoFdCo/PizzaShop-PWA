@@ -1,9 +1,5 @@
-import { lazy, Suspense } from "react";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { RootLayout } from "./components/layout/RootLayout";
-import { StoreLayout } from "./components/layout/StoreLayout";
-import { AdminLayout } from "./components/layout/AdminLayout";
-import { ProtectedRoute } from "./components/ProtectedRoute";
+import { Suspense } from "react";
+import { RouterProvider } from "react-router-dom";
 import { Spinner } from "./components/ui/Spinner";
 import { DriverGate } from "./components/DriverGate";
 
@@ -61,6 +57,7 @@ const DriverLoginPage = lazy(() =>
 const DriverOrdersPage = lazy(() =>
   import("./pages/driver/DriverOrdersPage").then((m) => ({ default: m.DriverOrdersPage }))
 );
+import { router } from "./routerConfig";
 
 function Fallback() {
   return <Spinner label="Carregando..." />;

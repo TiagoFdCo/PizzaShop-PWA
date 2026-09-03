@@ -12,13 +12,11 @@ interface UseOrderPollingResult {
 // qualquer mudança de status feita pelo admin (fonte única de verdade: a API).
 export function useOrderPolling(orderId: string | null, intervalMs = 4000): UseOrderPollingResult {
   const [order, setOrder] = useState<Order | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => orderId !== null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!orderId) {
-      setOrder(null);
-      setLoading(false);
       return;
     }
 
@@ -49,5 +47,5 @@ export function useOrderPolling(orderId: string | null, intervalMs = 4000): UseO
     };
   }, [orderId, intervalMs]);
 
-  return { order, loading, error };
+  return { order: orderId ? order : null, loading: orderId ? loading : false, error: orderId ? error : null };
 }

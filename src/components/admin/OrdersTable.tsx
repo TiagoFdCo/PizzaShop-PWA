@@ -1,5 +1,5 @@
 import type { Order, OrderStatus } from "../../types/order";
-import { ORDER_STATUS_FLOW, ORDER_STATUS_LABELS } from "../../types/order";
+import { ORDER_STATUS_FLOW, ORDER_STATUS_LABELS, DELIVERY_FAILURE_REASON_LABELS } from "../../types/order";
 import { formatCurrency } from "../../lib/formatCurrency";
 import { Badge } from "../ui/Badge";
 
@@ -8,13 +8,13 @@ interface OrdersTableProps {
   onStatusChange: (order: Order, status: OrderStatus) => void;
 }
 
-const STATUS_TONE: Record<OrderStatus, "neutral" | "success" | "warning" | "danger"> = {
+const STATUS_TONE: Record<OrderStatus, "neutral" | "success" | "warning" | "danger" | "info"> = {
   recebido: "neutral",
   preparo: "warning",
-  pronto_entrega: "warning",       // novo status P2
-  saiu_para_entrega: "warning",
+  pronto_entrega: "info",
+  saiu_para_entrega: "info",
   entregue: "success",
-  falha_entrega: "danger",         // novo status P3
+  falha_entrega: "danger",
 };
 
 export function OrdersTable({ orders, onStatusChange }: OrdersTableProps) {
@@ -31,6 +31,8 @@ export function OrdersTable({ orders, onStatusChange }: OrdersTableProps) {
             <th className="px-4 py-3">Cliente</th>
             <th className="px-4 py-3">Total</th>
             <th className="px-4 py-3">Status</th>
+            <th className="px-4 py-3">Cozinheiro</th>
+            <th className="px-4 py-3">Entregador</th>
             <th className="px-4 py-3 text-right">Avançar status</th>
           </tr>
         </thead>
@@ -41,8 +43,20 @@ export function OrdersTable({ orders, onStatusChange }: OrdersTableProps) {
               <td className="px-4 py-3 text-gray-800">{order.customer.name}</td>
               <td className="px-4 py-3 text-gray-600">{formatCurrency(order.total)}</td>
               <td className="px-4 py-3">
-                <Badge tone={STATUS_TONE[order.status]}>{ORDER_STATUS_LABELS[order.status]}</Badge>
+                <div className="flex flex-col items-start gap-1">
+                  <Badge tone={STATUS_TONE[order.status]}>{ORDER_STATUS_LABELS[order.status]}</Badge>
+                  {order.status === "falha_entrega" && order.deliveryFailure && (
+                    <span
+                      title={order.deliveryFailure.description ?? undefined}
+                      className="text-[11px] text-red-600"
+                    >
+                      {DELIVERY_FAILURE_REASON_LABELS[order.deliveryFailure.reason]}
+                    </span>
+                  )}
+                </div>
               </td>
+              <td className="px-4 py-3 text-gray-600">{order.cook?.name ?? "—"}</td>
+              <td className="px-4 py-3 text-gray-600">{order.driver?.name ?? "—"}</td>
               <td className="px-4 py-3 text-right">
                 <select
                   value={order.status}
@@ -55,6 +69,7 @@ export function OrdersTable({ orders, onStatusChange }: OrdersTableProps) {
                       {ORDER_STATUS_LABELS[status]}
                     </option>
                   ))}
+                  <option value="falha_entrega">{ORDER_STATUS_LABELS.falha_entrega}</option>
                 </select>
               </td>
             </tr>
