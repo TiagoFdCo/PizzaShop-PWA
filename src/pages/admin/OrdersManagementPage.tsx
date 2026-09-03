@@ -12,8 +12,12 @@ export function OrdersManagementPage() {
   const list = localOrders ?? orders ?? [];
 
   async function handleStatusChange(order: Order, status: OrderStatus) {
-    const updated = await updateOrderStatus(order.id, status);
-    setLocalOrders(list.map((o) => (o.id === updated.id ? updated : o)));
+    try {
+      const updated = await updateOrderStatus(order.id, status);
+      setLocalOrders((current) => (current ?? list).map((o) => (o.id === updated.id ? updated : o)));
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Não foi possível atualizar o pedido.");
+    }
   }
 
   return (

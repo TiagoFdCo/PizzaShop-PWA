@@ -1,76 +1,85 @@
+import type { CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
-import { MapPin, Clock, Truck } from "lucide-react";
+import { MapPin, Clock, Truck, ArrowRight, Flame, Star } from "lucide-react";
 import { useTenantStore } from "../../store/useTenantStore";
 
 export function LandingPage() {
   const navigate = useNavigate();
   const tenant = useTenantStore((state) => state.tenant);
 
+  const heroStyle = tenant?.bannerUrl
+    ? { "--hero-image": `url(${tenant.bannerUrl})` } as CSSProperties
+    : undefined;
+
   return (
-    <div>
-      <section
-        className="relative flex flex-col items-center justify-center text-center px-4 py-16"
-        style={
-          tenant?.bannerUrl
-            ? {
-                backgroundImage: "linear-gradient(rgba(255,248,240,0.88), rgba(255,248,240,0.95)), url(" + tenant.bannerUrl + ")",
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }
-            : undefined
-        }
-      >
-        {tenant?.logoUrl && (
-          <img src={tenant.logoUrl} alt={tenant.name} className="h-20 w-20 rounded-full object-cover mb-4 shadow-card" />
-        )}
-        <h1 className="text-4xl font-display font-extrabold text-gray-900 mb-3">
-          {tenant?.name ?? "Pizza quentinha, do jeito que você quer"}
-        </h1>
-        <p className="text-gray-600 max-w-md mb-6">
-          {tenant?.tagline ||
-            "Monte sua pizza com os ingredientes que você gosta e acompanhe o pedido em tempo real."}
-        </p>
-        <button onClick={() => navigate("/cardapio")} className="btn-primary">
-          Ver cardápio
-        </button>
+    <div className="landing-page">
+      <section className="hero-modern" style={heroStyle}>
+        <div className="hero-content">
+          {tenant?.logoUrl && <img src={tenant.logoUrl} alt={tenant.name} className="hero-logo" />}
+          <div className="hero-eyebrow">Feita para você</div>
+          <h1 className="hero-title">{tenant?.name ?? "Pizza quentinha, do jeito que você quer"}</h1>
+          <p className="hero-text">
+            {tenant?.tagline || "Monte sua pizza com os ingredientes que você gosta e acompanhe o pedido em tempo real."}
+          </p>
+          <button onClick={() => navigate("/cardapio")} className="btn-primary">
+            Ver cardápio <ArrowRight size={18} className="ml-2" />
+          </button>
+        </div>
       </section>
 
       {tenant?.aboutText && (
-        <section className="mx-auto max-w-2xl px-4 pb-4 text-center">
-          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-primary">Sobre nós</h2>
-          <p className="text-gray-600">{tenant.aboutText}</p>
+        <section className="story-section">
+          <div className="story-kicker">Nossa história</div>
+          <h2 className="story-title">Sabor que começa nos detalhes</h2>
+          <p className="story-text">{tenant.aboutText}</p>
         </section>
       )}
 
       {tenant && (
-        <section className="mx-auto max-w-3xl px-4 pb-16 pt-6">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="card flex items-start gap-3">
-              <MapPin className="mt-0.5 shrink-0 text-primary" size={20} />
+        <section className="info-section" aria-label="Informações da loja">
+          <div className="info-grid">
+            <div className="info-card">
+              <span className="info-icon"><MapPin size={20} /></span>
               <div>
-                <p className="text-sm font-semibold text-gray-800">Endereço</p>
-                <p className="text-sm text-gray-500">{tenant.address}</p>
+                <p className="info-card-title">Onde estamos</p>
+                <p className="info-card-text">{tenant.address}</p>
               </div>
             </div>
-            <div className="card flex items-start gap-3">
-              <Clock className="mt-0.5 shrink-0 text-primary" size={20} />
+            <div className="info-card">
+              <span className="info-icon"><Clock size={20} /></span>
               <div>
-                <p className="text-sm font-semibold text-gray-800">Horário</p>
-                <p className="text-sm text-gray-500">{tenant.openingHours}</p>
+                <p className="info-card-title">Horário</p>
+                <p className="info-card-text">{tenant.openingHours}</p>
               </div>
             </div>
-            <div className="card flex items-start gap-3">
-              <Truck className="mt-0.5 shrink-0 text-primary" size={20} />
+            <div className="info-card">
+              <span className="info-icon"><Truck size={20} /></span>
               <div>
-                <p className="text-sm font-semibold text-gray-800">Entrega</p>
-                <p className="text-sm text-gray-500">
-                  Raio de {tenant.deliveryRadiusKm} km · ~{tenant.avgPrepTimeMin} min de preparo
-                </p>
+                <p className="info-card-title">Entrega</p>
+                <p className="info-card-text">Raio de {tenant.deliveryRadiusKm} km · ~{tenant.avgPrepTimeMin} min de preparo</p>
               </div>
             </div>
           </div>
         </section>
       )}
+
+      <section className="mx-auto w-[min(1080px,calc(100%-40px))] pb-20">
+        <div className="pizza-gradient rounded-[24px] px-7 py-8 shadow-[0_20px_50px_rgba(58,29,19,.14)] md:flex md:items-center md:justify-between md:gap-8 md:px-10">
+          <div>
+            <div className="mb-2 flex items-center gap-2 text-xs font-extrabold uppercase tracking-[.14em] text-[#f5dca8]">
+              <Flame size={15} /> Feita na hora
+            </div>
+            <h2 className="font-display text-2xl font-bold md:text-3xl">Seu próximo pedaço começa aqui.</h2>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-white/75">Massa de longa fermentação, ingredientes selecionados e forno quente para chegar à sua mesa do jeito certo.</p>
+          </div>
+          <button onClick={() => navigate("/cardapio")} className="mt-6 inline-flex shrink-0 items-center justify-center gap-2 rounded-[14px] bg-white px-5 py-3 text-sm font-extrabold text-[#7c1c17] shadow-lg md:mt-0">
+            Escolher minha pizza <ArrowRight size={17} />
+          </button>
+        </div>
+        <div className="mt-5 flex items-center justify-center gap-2 text-xs font-semibold text-[#8b7c74]">
+          <Star size={14} className="fill-current text-[#d3a24c]" /> Experiência artesanal, do forno à sua porta.
+        </div>
+      </section>
     </div>
   );
 }

@@ -19,16 +19,16 @@ export function LoginPage() {
   });
 
   async function onSubmit(data: LoginFormData) {
-  try {
-    await login(data);
-    const role = useAuthStore.getState().session?.staff.role;
-    if (role === "cozinha") navigate("/cozinha");
-    else if (role === "entrega") navigate("/entrega");
-    else navigate("/admin/dashboard");
-  } catch {
-    // erro já fica disponível via useAuthStore().error
+    try {
+      await login(data);
+      const role = useAuthStore.getState().session?.staff.role;
+      if (role === "cozinha") navigate("/cozinha/pedidos");
+      else if (role === "entrega") navigate("/entrega");
+      else navigate("/admin/dashboard");
+    } catch {
+      // erro já fica disponível via useAuthStore().error
+    }
   }
-}
 
   return (
     <div className="flex h-screen items-center justify-center bg-gray-50">
