@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pizzashop
+      POSTGRES_PASSWORD: pizzashop
+      POSTGRES_DB: pizzashop
+    ports:
+      - "5432:5432"
+    volumes:
+      - pizzashop_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pizzashop"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+psycopg2://pizzashop:pizzashop@postgres:5432/pizzashop
+      JWT_SECRET: dev-secret-change-me
+      JWT_ALGORITHM: HS256
+      JWT_EXPIRE_MINUTES: "480"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    # Sobe já migrado: roda as migrations e só depois inicia o uvicorn.
+    command: >
+      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+volumes:
+  pizzashop_pgdata:
