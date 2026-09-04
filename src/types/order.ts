@@ -1,4 +1,4 @@
-﻿import type { PaymentMethod } from "./tenant";
+import type { PaymentMethod } from "./tenant";
 import type { Size } from "./product";
 
 export type OrderStatus =
@@ -56,8 +56,28 @@ export interface DeliveryFailure {
   reportedAt: string;
 }
 
+/**
+ * Item do carrinho (frontend-only, antes de enviar o pedido).
+ * Usa `cartItemId` como chave local gerada pelo frontend.
+ */
 export interface CartItem {
   cartItemId: string;
+  productId: string;
+  name: string;
+  imageUrl: string;
+  size: Size;
+  toppings: { id: string; name: string; price: number }[];
+  unitPrice: number;
+  quantity: number;
+  notes?: string;
+}
+
+/**
+ * Item de pedido retornado pelo backend.
+ * Usa `id` (UUID gerado pelo banco), não `cartItemId`.
+ */
+export interface OrderItem {
+  id: string;
   productId: string;
   name: string;
   imageUrl: string;
@@ -74,9 +94,10 @@ export interface CustomerInfo {
   phone: string;
 }
 
+/** Pedido retornado pela API (items vêm com `id`, não `cartItemId`). */
 export interface Order {
   id: string;
-  items: CartItem[];
+  items: OrderItem[];
   customer: CustomerInfo;
   paymentMethod: PaymentMethod;
   subtotal: number;
@@ -90,4 +111,13 @@ export interface Order {
   deliveryFailure?: DeliveryFailure;
 }
 
-export type OrderInput = Omit<Order, "id" | "status" | "createdAt" | "cook" | "driver" | "deliveryFailure">;
+/**
+ * Payload enviado para criar um pedido.
+ * `items` usa `CartItem[]` (do carrinho) — o service mapeia para o formato do backend.
+ */
+export type OrderInput = Omit<
+  Order,
+  "id" | "status" | "createdAt" | "cook" | "driver" | "deliveryFailure" | "items"
+> & {
+  items: CartItem[];
+};

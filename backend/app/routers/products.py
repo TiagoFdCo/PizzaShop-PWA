@@ -23,6 +23,15 @@ def read_products(db: Session = Depends(get_db)) -> list[ProductOut]:
     return [ProductOut.model_validate(p) for p in list_products(db, _tenant_id(db))]
 
 
+@router.get("/{product_id}", response_model=ProductOut)
+def read_product(product_id: str, db: Session = Depends(get_db)) -> ProductOut:
+    """Retorna um produto pelo ID — usado pela tela de detalhe da pizza."""
+    product = get_product(db, product_id)
+    if product is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Produto não encontrado")
+    return ProductOut.model_validate(product)
+
+
 @router.post("", response_model=ProductOut, status_code=status.HTTP_201_CREATED)
 def add_product(
     data: ProductInput,

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.crud.order import (
     claim_order,
@@ -14,7 +14,7 @@ from app.crud.order import (
 from app.crud.tenant import get_tenant
 from app.db.session import get_db
 from app.deps import get_current_staff, require_role
-from app.models.order import Order
+from app.models.order import Order, OrderItem, OrderStatus
 from app.models.staff import Staff, StaffRole
 from app.schemas.order import (
     DeliveryFailureInput,
@@ -22,12 +22,22 @@ from app.schemas.order import (
     OrderInput,
     OrderOut,
 )
+from app.schemas.common import CamelModel
 
 router = APIRouter(
     prefix="/orders",
     tags=["orders"],
 )
 
+
+# ─── Schema local ─────────────────────────────────────────────────────────────
+
+class StatusUpdateInput(CamelModel):
+    """Payload de PATCH /orders/{id}/status — override administrativo."""
+    status: OrderStatus
+
+
+# ─── Helpers ──────────────────────────────────────────────────────────────────
 
 def _tenant_id(db: Session) -> str:
     tenant = get_tenant(db)
@@ -127,6 +137,28 @@ def _handle_order_error(error: ValueError) -> HTTPException:
     )
 
 
+def _load_order_with_relations(db: Session, order_id: str) -> Order:
+    """Carrega pedido com todos os relacionamentos necessários para _order_to_out."""
+    from sqlalchemy import select
+
+    stmt = (
+        select(Order)
+        .options(
+            selectinload(Order.items).selectinload(OrderItem.toppings),
+            selectinload(Order.cook),
+            selectinload(Order.driver),
+            selectinload(Order.delivery_failure),
+        )
+        .where(Order.id == order_id)
+    )
+    order = db.scalar(stmt)
+    if order is None:
+        raise ValueError("Pedido não encontrado.")
+    return order
+
+
+# ─── Endpoints ────────────────────────────────────────────────────────────────
+
 @router.post(
     "",
     response_model=OrderOut,
@@ -175,6 +207,32 @@ def read_orders(
 
 
 @router.get(
+    "/{order_id}/track",
+    response_model=OrderOut,
+    summary="Rastreamento público — sem autenticação",
+)
+def track_order(
+    order_id: str,
+    db: Session = Depends(get_db),
+) -> OrderOut:
+    """
+    Endpoint público para o cliente acompanhar o próprio pedido pelo ID.
+
+    Não exige JWT — o ID do pedido (UUID) é gerado pelo banco e só o cliente
+    que criou o pedido tem acesso a ele (recebeu no fluxo de checkout).
+    """
+    try:
+        order = _load_order_with_relations(db, order_id)
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(error),
+        ) from error
+
+    return _order_to_out(order)
+
+
+@router.get(
     "/{order_id}",
     response_model=OrderOut,
 )
@@ -196,6 +254,34 @@ def read_order(
     except ValueError as error:
         raise _handle_order_error(error) from error
 
+    return _order_to_out(order)
+
+
+@router.patch(
+    "/{order_id}/status",
+    response_model=OrderOut,
+    summary="Override administrativo de status",
+)
+def update_status_admin(
+    order_id: str,
+    data: StatusUpdateInput,
+    db: Session = Depends(get_db),
+    _admin: Staff = Depends(require_role([StaffRole.admin])),
+) -> OrderOut:
+    """
+    Admin pode forçar qualquer transição de status sem as restrições de role.
+    Útil para corrigir pedidos travados ou para demos/testes.
+    """
+    try:
+        order = _load_order_with_relations(db, order_id)
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(error)) from error
+
+    order.status = data.status
+    db.commit()
+
+    # Recarrega para refletir qualquer cascade
+    order = _load_order_with_relations(db, order_id)
     return _order_to_out(order)
 
 

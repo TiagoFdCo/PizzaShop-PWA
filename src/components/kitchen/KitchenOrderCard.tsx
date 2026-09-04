@@ -46,7 +46,7 @@ export function KitchenOrderCard({
 
       <div className="rounded-lg bg-gray-50 p-3 text-sm">
         {order.items.map((item) => (
-          <div key={item.cartItemId} className="flex gap-2 py-1">
+          <div key={item.id} className="flex gap-2 py-1">
             <span className="font-semibold text-gray-800">{item.quantity}x</span>
             <div className="min-w-0 flex-1">
               <p className="font-medium text-gray-800">{item.name} ({item.size})</p>

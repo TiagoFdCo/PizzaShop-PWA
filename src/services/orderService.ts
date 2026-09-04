@@ -3,80 +3,100 @@ import type { DeliveryFailure, Order, OrderInput, OrderStaffRef, OrderStatus } f
 
 const ENDPOINT = "/orders";
 
-// Igual ao padrão do kitchenService: tenta o endpoint real da API (previsto
-// no plano), e cai pro PATCH genérico do mock se o backend ainda não tiver
-// essa rota implementada (caso de /orders hoje — fase P2 em andamento).
-async function updateMockStatus(
-  id: string,
-  status: OrderStatus,
-  extra: Record<string, unknown> = {}
-): Promise<Order> {
-  return apiFetch<Order>(`${ENDPOINT}/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify({ status, ...extra }),
-    useMockApi: true,
-  });
-}
+// ─── Leitura (staff autenticado) ──────────────────────────────────────────
 
 export async function getOrders(): Promise<Order[]> {
-  try {
-    return await apiFetch<Order[]>(ENDPOINT);
-  } catch {
-    return apiFetch<Order[]>(ENDPOINT, { useMockApi: true });
-  }
+  return apiFetch<Order[]>(ENDPOINT);
 }
 
 export async function getOrderById(id: string): Promise<Order> {
-  try {
-    return await apiFetch<Order>(`${ENDPOINT}/${id}`);
-  } catch {
-    return apiFetch<Order>(`${ENDPOINT}/${id}`, { useMockApi: true });
-  }
+  return apiFetch<Order>(`${ENDPOINT}/${id}`);
 }
+
+// ─── Rastreamento público (cliente, sem auth) ──────────────────────────────
+
+/**
+ * Endpoint público — não exige JWT.
+ * Usado pela tela /pedido/:id que o cliente acessa sem estar logado.
+ */
+export async function trackOrder(id: string): Promise<Order> {
+  return apiFetch<Order>(`${ENDPOINT}/${id}/track`);
+}
+
+// ─── Criação do pedido ────────────────────────────────────────────────────
 
 export async function createOrder(input: OrderInput): Promise<Order> {
+  // Envia somente os campos que o backend espera (OrderInput no schema Pydantic).
+  // id, status, createdAt, cook, driver são gerados pelo backend — não enviamos.
+  // cartItemId é chave do carrinho — não vai pro backend.
   const payload = {
-    ...input,
-    status: "recebido" as OrderStatus,
-    createdAt: new Date().toISOString(),
-    cook: null,
-    driver: null,
+    items: input.items.map((item) => ({
+      productId: item.productId,
+      name: item.name,
+      imageUrl: item.imageUrl,
+      size: item.size,
+      unitPrice: item.unitPrice,
+      quantity: item.quantity,
+      notes: item.notes ?? null,
+      toppings: item.toppings.map((t) => ({
+        name: t.name,
+        price: t.price,
+        // id do topping não vai pro backend: OrderItemToppingInput só quer name/price
+      })),
+    })),
+    customer: input.customer,
+    paymentMethod: input.paymentMethod,
+    subtotal: input.subtotal,
+    deliveryFee: input.deliveryFee,
+    total: input.total,
   };
-  try {
-    return await apiFetch<Order>(ENDPOINT, { method: "POST", body: JSON.stringify(payload) });
-  } catch {
-    return apiFetch<Order>(ENDPOINT, { method: "POST", body: JSON.stringify(payload), useMockApi: true });
-  }
+
+  return apiFetch<Order>(ENDPOINT, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
-export async function updateOrderStatus(id: string, status: OrderStatus): Promise<Order> {
-  return updateMockStatus(id, status);
+// ─── Ações do admin ────────────────────────────────────────────────────────
+
+/**
+ * Admin pode forçar qualquer transição de status via PATCH /orders/{id}/status.
+ * As regras de negócio (cozinha→ready, driver→delivered etc.) existem nos
+ * endpoints específicos; este é um override administrativo.
+ */
+export async function updateOrderStatus(orderId: string, status: OrderStatus): Promise<Order> {
+  return apiFetch<Order>(`${ENDPOINT}/${orderId}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
 }
 
-// ─── Funções do entregador ────────────────────────────────────────────────────
+// ─── Ações do entregador ───────────────────────────────────────────────────
 
 export async function getOrdersForDriver(driverId: string): Promise<Order[]> {
+  // GET /orders já filtra por driver no backend quando role=entrega.
+  // O filtro local é redundante mas seguro (belt + suspenders).
   const all = await getOrders();
-  return all.filter((o) => o.driver?.id === driverId && o.status === "saiu_para_entrega");
+  return all.filter(
+    (o) => o.driver?.id === driverId && o.status === "saiu_para_entrega"
+  );
 }
 
 export async function markOrderDelivered(orderId: string): Promise<Order> {
-  try {
-    return await apiFetch<Order>(`${ENDPOINT}/${orderId}/delivered`, { method: "PATCH" });
-  } catch {
-    return updateMockStatus(orderId, "entregue");
-  }
+  return apiFetch<Order>(`${ENDPOINT}/${orderId}/delivered`, { method: "PATCH" });
 }
 
-export async function markOrderFailed(orderId: string, failure: DeliveryFailure): Promise<Order> {
-  try {
-    return await apiFetch<Order>(`${ENDPOINT}/${orderId}/failed`, {
-      method: "PATCH",
-      body: JSON.stringify({ reason: failure.reason, description: failure.description }),
-    });
-  } catch {
-    return updateMockStatus(orderId, "falha_entrega", { deliveryFailure: failure });
-  }
+export async function markOrderFailed(
+  orderId: string,
+  failure: DeliveryFailure
+): Promise<Order> {
+  return apiFetch<Order>(`${ENDPOINT}/${orderId}/failed`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      reason: failure.reason,
+      description: failure.description ?? null,
+    }),
+  });
 }
 
 export type { OrderStaffRef };

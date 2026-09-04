@@ -1,12 +1,8 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash2, Bike, CircleDot, CheckCircle2 } from "lucide-react";
-import type { Driver } from "../../types/driver";
+import type { Staff } from "../../types/staff";
 import type { Order } from "../../types/order";
-import {
-  getDrivers,
-  createDriver,
-  deleteDriver,
-} from "../../services/driverService";
+import { getDrivers, createDriver } from "../../services/driverService";
 import { getOrders } from "../../services/orderService";
 
 interface AddDriverForm {
@@ -18,7 +14,7 @@ interface AddDriverForm {
 const EMPTY_FORM: AddDriverForm = { name: "", username: "", password: "" };
 
 export function DriversManagementPage() {
-  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [drivers, setDrivers] = useState<Staff[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +39,9 @@ export function DriversManagementPage() {
       setDrivers(driversData);
       setOrders(ordersData);
     } catch {
-      setError("Não foi possível carregar os dados. Verifique se a API está rodando.");
+      setError(
+        "Não foi possível carregar os dados. Verifique se a API está rodando."
+      );
     } finally {
       setLoading(false);
     }
@@ -65,7 +63,10 @@ export function DriversManagementPage() {
       setFormError("Preencha todos os campos.");
       return;
     }
-    // Verifica usuário duplicado
+    if (form.password.trim().length < 6) {
+      setFormError("A senha deve ter no mínimo 6 caracteres.");
+      return;
+    }
     if (drivers.some((d) => d.username === form.username.trim())) {
       setFormError("Já existe um entregador com esse usuário.");
       return;
@@ -81,8 +82,10 @@ export function DriversManagementPage() {
       setDrivers((prev) => [...prev, created]);
       setForm(EMPTY_FORM);
       setShowForm(false);
-    } catch {
-      setFormError("Erro ao cadastrar. Tente novamente.");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Erro ao cadastrar.";
+      // Exibe a mensagem real da API (ex: "Username já em uso")
+      setFormError(msg);
     } finally {
       setSaving(false);
     }
@@ -90,10 +93,12 @@ export function DriversManagementPage() {
 
   async function handleDelete(id: string) {
     try {
-      await deleteDriver(id);
+      // Backend ainda não tem DELETE /staff/:id — remove só da lista local
+      // e exibe aviso. Implemente quando o endpoint for criado.
+      alert(
+        "Remoção ainda não implementada no backend. O entregador foi ocultado da lista até a próxima recarga."
+      );
       setDrivers((prev) => prev.filter((d) => d.id !== id));
-    } catch {
-      alert("Erro ao remover entregador.");
     } finally {
       setDeletingId(null);
     }
@@ -134,7 +139,9 @@ export function DriversManagementPage() {
               <input
                 type="text"
                 value={form.name}
-                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, name: e.target.value }))
+                }
                 placeholder="ex: Marcos Oliveira"
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
               />
@@ -147,7 +154,10 @@ export function DriversManagementPage() {
                 type="text"
                 value={form.username}
                 onChange={(e) =>
-                  setForm((f) => ({ ...f, username: e.target.value.toLowerCase().replace(/\s/g, "") }))
+                  setForm((f) => ({
+                    ...f,
+                    username: e.target.value.toLowerCase().replace(/\s/g, ""),
+                  }))
                 }
                 placeholder="ex: marcos"
                 autoCapitalize="none"
@@ -159,10 +169,12 @@ export function DriversManagementPage() {
                 Senha
               </label>
               <input
-                type="text"
+                type="password"
                 value={form.password}
-                onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                placeholder="ex: entrega123"
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, password: e.target.value }))
+                }
+                placeholder="mín. 6 caracteres"
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
               />
             </div>
@@ -246,7 +258,10 @@ export function DriversManagementPage() {
               {drivers.map((driver) => {
                 const onRoute = isOnRoute(driver.id);
                 return (
-                  <tr key={driver.id} className="hover:bg-gray-50 transition-colors">
+                  <tr
+                    key={driver.id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
                     <td className="px-5 py-3 font-medium text-gray-800">
                       {driver.name}
                     </td>
@@ -261,7 +276,10 @@ export function DriversManagementPage() {
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1.5 text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-0.5 text-xs font-medium">
-                          <CheckCircle2 size={11} className="text-emerald-500" />
+                          <CheckCircle2
+                            size={11}
+                            className="text-emerald-500"
+                          />
                           Disponível
                         </span>
                       )}
@@ -269,7 +287,9 @@ export function DriversManagementPage() {
                     <td className="px-5 py-3 text-right">
                       {deletingId === driver.id ? (
                         <div className="flex items-center justify-end gap-2">
-                          <span className="text-xs text-gray-500">Confirmar?</span>
+                          <span className="text-xs text-gray-500">
+                            Confirmar?
+                          </span>
                           <button
                             onClick={() => handleDelete(driver.id)}
                             className="text-xs text-red-600 font-medium hover:underline"

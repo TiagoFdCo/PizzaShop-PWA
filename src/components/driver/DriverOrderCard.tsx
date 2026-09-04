@@ -111,8 +111,8 @@ export function DriverOrderCard({ order, onDelivered, onFailed }: DriverOrderCar
         {showItems && (
           <ul className="px-4 pb-3 border-t border-zinc-800/40 pt-2.5 flex flex-col gap-1.5">
             {order.items.map((item) => (
-              // usa cartItemId (campo correto do CartItem real do projeto)
-              <li key={item.cartItemId} className="flex justify-between text-sm">
+              
+              <li key={item.id} className="flex justify-between text-sm">
                 <span className="text-zinc-400">
                   {item.quantity}× {item.name}{" "}
                   <span className="text-zinc-600 text-xs">
