@@ -52,13 +52,18 @@ def upgrade() -> None:
         END $$;
     """))
 
-    staff_role = sa.Enum("admin", "cozinha", "entrega", name="staff_role", create_type=False)
-    order_status = sa.Enum(
+    # Usamos postgresql.ENUM (em vez do sa.Enum genérico) com create_type=False.
+    # sa.Enum genérico não respeita de forma confiável create_type=False no dialeto
+    # do Postgres — ele tenta rodar CREATE TYPE de novo durante create_table(), o que
+    # colide com os tipos já criados pelos blocos DO $$ acima (erro "type already exists").
+    # postgresql.ENUM é a forma documentada de reusar um ENUM já existente entre tabelas.
+    staff_role = postgresql.ENUM("admin", "cozinha", "entrega", name="staff_role", create_type=False)
+    order_status = postgresql.ENUM(
         "recebido", "preparo", "pronto_entrega", "saiu_para_entrega", "entregue", "falha_entrega",
         name="order_status", create_type=False,
     )
-    payment_method = sa.Enum("pix", "cartao", "dinheiro", name="payment_method", create_type=False)
-    delivery_failure_reason = sa.Enum(
+    payment_method = postgresql.ENUM("pix", "cartao", "dinheiro", name="payment_method", create_type=False)
+    delivery_failure_reason = postgresql.ENUM(
         "cliente_ausente", "endereco_nao_encontrado", "cliente_recusou", "problema_veiculo", "outro",
         name="delivery_failure_reason", create_type=False,
     )

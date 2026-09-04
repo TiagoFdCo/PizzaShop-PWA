@@ -108,8 +108,8 @@ def main() -> None:
     parser.add_argument(
         "--db-json",
         type=Path,
-        default=Path(__file__).resolve().parent.parent.parent / "db.json",
-        help="Caminho pro db.json do front (default: ../../db.json a partir de scripts/)",
+        default=Path(__file__).resolve().parent.parent / "db.json",
+        help="Caminho pro db.json do front (default: ../db.json a partir de scripts/, ou seja backend/db.json)",
     )
     args = parser.parse_args()
 
