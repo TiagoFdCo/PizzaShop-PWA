@@ -1,28 +1,19 @@
 import { apiFetch } from "./api";
 import type { Driver } from "../types/driver";
 
-const ENDPOINT = "/drivers";
+const ENDPOINT = "/staff";
 
 export async function getDrivers(): Promise<Driver[]> {
-  return apiFetch<Driver[]>(ENDPOINT);
+  return apiFetch<Driver[]>(`${ENDPOINT}?role=entrega`);
 }
 
-export async function createDriver(data: Omit<Driver, "id">): Promise<Driver> {
+export async function createDriver(data: { name: string; username: string; password: string }): Promise<Driver> {
   return apiFetch<Driver>(ENDPOINT, {
     method: "POST",
-    body: JSON.stringify(data),
+    body: JSON.stringify({ ...data, role: "entrega" }),
   });
 }
 
 export async function deleteDriver(id: string): Promise<void> {
   await apiFetch(`${ENDPOINT}/${id}`, { method: "DELETE" });
-}
-
-/** Autentica entregador por usuário + senha. Retorna null se inválido. */
-export async function loginDriver(
-  username: string,
-  password: string
-): Promise<Driver | null> {
-  const drivers = await getDrivers();
-  return drivers.find((d) => d.username === username && d.password === password) ?? null;
 }

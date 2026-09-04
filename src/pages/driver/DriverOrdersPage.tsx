@@ -15,7 +15,7 @@ type Toast = { id: number; message: string; type: "success" | "error" };
 export function DriverOrdersPage() {
   const session = useAuthStore((s) => s.session);
   // O driverId vem da sessão real — DriverGate garante que session.id existe
-  const driverId = session!.id!;
+  const driverId = session!.staff.id;
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
