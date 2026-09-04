@@ -29,3 +29,8 @@ def create_staff(db: Session, data: StaffCreate) -> Staff:
     db.commit()
     db.refresh(staff)
     return staff
+
+
+def delete_staff(db: Session, staff: Staff) -> None:
+    db.delete(staff)
+    db.commit()
