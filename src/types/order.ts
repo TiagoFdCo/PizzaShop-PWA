@@ -1,10 +1,6 @@
-import type { PaymentMethod } from "./tenant";
+﻿import type { PaymentMethod } from "./tenant";
 import type { Size } from "./product";
 
-<<<<<<< HEAD
-// ─── Status ───────────────────────────────────────────────────────────────────
-=======
->>>>>>> origin/feat/P4
 export type OrderStatus =
   | "recebido"
   | "preparo"
@@ -32,7 +28,6 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   falha_entrega: "Falha na entrega",
 };
 
-// ─── Staff (P3) ───────────────────────────────────────────────────────────────
 export type StaffRole = "admin" | "cozinha" | "entrega";
 
 export interface OrderStaffRef {
@@ -40,7 +35,6 @@ export interface OrderStaffRef {
   name: string;
 }
 
-// ─── Falha de entrega (P3) ────────────────────────────────────────────────────
 export type DeliveryFailureReason =
   | "cliente_ausente"
   | "endereco_nao_encontrado"
@@ -62,14 +56,6 @@ export interface DeliveryFailure {
   reportedAt: string;
 }
 
-// ─── Carrinho ─────────────────────────────────────────────────────────────────
-// Referência leve embutida no pedido (evita 1 fetch extra por pedido nas telas)
-export interface OrderStaffRef {
-  id: string;
-  name: string;
-}
-
-// Um item dentro do carrinho/pedido: uma pizza já customizada (tamanho + adicionais)
 export interface CartItem {
   cartItemId: string;
   productId: string;
@@ -88,7 +74,6 @@ export interface CustomerInfo {
   phone: string;
 }
 
-// ─── Pedido ───────────────────────────────────────────────────────────────────
 export interface Order {
   id: string;
   items: CartItem[];
@@ -105,5 +90,4 @@ export interface Order {
   deliveryFailure?: DeliveryFailure;
 }
 
-// Payload para criar um pedido (id/status/createdAt são definidos pela API mock)
 export type OrderInput = Omit<Order, "id" | "status" | "createdAt" | "cook" | "driver" | "deliveryFailure">;

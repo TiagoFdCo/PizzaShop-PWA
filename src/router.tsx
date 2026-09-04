@@ -1,5 +1,5 @@
-import { lazy, Suspense } from "react";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { Suspense, lazy } from "react";
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { RootLayout } from "./components/layout/RootLayout";
 import { StoreLayout } from "./components/layout/StoreLayout";
 import { AdminLayout } from "./components/layout/AdminLayout";
@@ -25,10 +25,10 @@ const AdminMenuManagementPage = lazy(() => import("./pages/admin/MenuManagementP
 const AdminOrdersManagementPage = lazy(() => import("./pages/admin/OrdersManagementPage").then((m) => ({ default: m.OrdersManagementPage })));
 const AdminDriversManagementPage = lazy(() => import("./pages/admin/DriversManagementPage").then((m) => ({ default: m.DriversManagementPage })));
 
-// Cozinha (real, do P2)
+// Cozinha (P2)
 const KitchenOrdersPage = lazy(() => import("./pages/kitchen/KitchenOrdersPage").then((m) => ({ default: m.KitchenOrdersPage })));
 
-// Entregador (real, do P3)
+// Entregador (P3)
 const DriverLoginPage = lazy(() => import("./pages/driver/DriverLoginPage").then((m) => ({ default: m.DriverLoginPage })));
 const DriverOrdersPage = lazy(() => import("./pages/driver/DriverOrdersPage").then((m) => ({ default: m.DriverOrdersPage })));
 
@@ -73,7 +73,7 @@ export const router = createBrowserRouter([
           },
         ],
       },
-      // Cozinha — logo compartilhado com /admin, redireciona por role
+      // Cozinha — protegida por role
       {
         path: "/cozinha",
         element: <ProtectedRoute allowedRoles={["cozinha"]} redirectTo="/admin" />,
@@ -84,7 +84,7 @@ export const router = createBrowserRouter([
           },
         ],
       },
-      // Entregador — login próprio via DriverGate
+      // Entregador — mostra login se não autenticado, pedidos se autenticado
       {
         path: "/entrega",
         element: <DriverGate login={<DriverLoginPage />} app={<DriverOrdersPage />} />,

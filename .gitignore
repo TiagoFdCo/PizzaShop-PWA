@@ -1,11 +1,10 @@
-<<<<<<< HEAD
+
 node_modules
 .env*.local
-=======
 node_modules/
 dist
-/
 *.tsbuildinfo
 .env
 .env.*
->>>>>>> origin/feat/integracao-sistema
+!.env.example
+
