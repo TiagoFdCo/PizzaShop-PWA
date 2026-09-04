@@ -4,8 +4,11 @@ import { useTenantStore } from "../store/useTenantStore";
 // Converte hex (#RRGGBB) em "R G B" para permitir opacidade dinâmica no Tailwind
 // (usa-se assim no tailwind.config.ts: rgb(var(--color-primary) / <alpha-value>))
 function hexToRgbTriplet(hex: string): string {
-  const clean = hex.replace("#", "");
-  const bigint = parseInt(clean, 16);
+  if (!/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+    throw new Error("Cor hexadecimal inválida");
+  }
+
+  const bigint = Number.parseInt(hex.slice(1), 16);
   const r = (bigint >> 16) & 255;
   const g = (bigint >> 8) & 255;
   const b = bigint & 255;

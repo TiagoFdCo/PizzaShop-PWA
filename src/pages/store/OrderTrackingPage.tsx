@@ -20,13 +20,13 @@ export function OrderTrackingPage() {
       </p>
 
       <div className="card mb-6">
-        <OrderStatusTracker status={order.status} />
+        <OrderStatusTracker status={order.status} deliveryFailure={order.deliveryFailure} />
       </div>
 
       <div className="card space-y-1 text-sm">
         <h2 className="font-semibold text-gray-800 mb-1">Resumo</h2>
         {order.items.map((item) => (
-          <div key={item.cartItemId} className="flex justify-between text-gray-600">
+          <div key={item.id} className="flex justify-between text-gray-600">
             <span>
               {item.name} ({item.size}) x{item.quantity}
             </span>

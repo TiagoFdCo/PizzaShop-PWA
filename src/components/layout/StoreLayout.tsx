@@ -9,22 +9,22 @@ export function StoreLayout() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 border-b border-gray-100 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <Link to="/" className="flex items-center gap-2">
+      <header className="store-header">
+        <div className="store-header-inner flex items-center justify-between">
+          <Link to="/" className="store-brand">
             {tenant?.logoUrl && (
-              <img src={tenant.logoUrl} alt={tenant.name} className="h-9 w-9 rounded-full object-cover" />
+              <img src={tenant.logoUrl} alt={tenant.name} className="store-brand-logo" />
             )}
-            <span className="font-display text-lg font-bold text-gray-900">
+            <span className="store-brand-name">
               {tenant?.name ?? "PizzaShop"}
             </span>
           </Link>
 
-          <nav className="flex items-center gap-4 text-sm font-medium text-gray-600">
-            <NavLink to="/cardapio" className={({ isActive }) => (isActive ? "text-primary" : "hover:text-primary")}>
+          <nav className="flex items-center gap-5 text-sm font-semibold">
+            <NavLink to="/cardapio" className={({ isActive }) => `store-nav-link ${isActive ? "active text-primary" : "hover:text-primary"}`}>
               Cardápio
             </NavLink>
-            <Link to="/carrinho" className="relative flex items-center gap-1 hover:text-primary" aria-label="Carrinho">
+            <Link to="/carrinho" className="store-cart relative hover:text-primary" aria-label="Carrinho">
               <ShoppingCart size={20} />
               {itemCount > 0 && (
                 <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-white">
@@ -40,12 +40,12 @@ export function StoreLayout() {
         <Outlet />
       </main>
 
-      <footer className="border-t border-gray-100 bg-white px-4 py-6 text-sm text-gray-500">
-        <div className="mx-auto max-w-5xl space-y-1">
-          <p className="font-semibold text-gray-700">{tenant?.name}</p>
+      <footer className="store-footer text-sm">
+        <div className="store-footer-inner">
+          <p className="store-footer-name">{tenant?.name}</p>
           {tenant?.address && <p>{tenant.address}</p>}
           {tenant?.openingHours && <p>Funcionamento: {tenant.openingHours}</p>}
-          <p className="pt-2 text-xs text-gray-400">
+          <p className="store-footer-bottom">
             <Link to="/admin" className="hover:text-primary">
               Acesso administrativo
             </Link>

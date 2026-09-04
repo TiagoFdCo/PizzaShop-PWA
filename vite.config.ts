@@ -22,15 +22,17 @@ export default defineConfig({
           { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
         ],
       },
+      // Em dev o SW NÃO é registrado (devOptions.enabled fica false por padrão),
+      // então o service worker só entra no `build`/`preview`.
       workbox: {
+        // Só faz cache de imagens da MESMA origem. A API fica em outra origem
+        // (:8000) e é deixada passar direto — assim o SW nunca intercepta nem
+        // reenvia as chamadas de /products, /tenant etc., o que evita a
+        // enxurrada de requisições (ERR_INSUFFICIENT_RESOURCES) quando o SW
+        // fica ativo depois de um build/preview.
         runtimeCaching: [
           {
-            urlPattern: ({ url }) => url.pathname.startsWith("/products") || url.pathname.startsWith("/tenant"),
-            handler: "StaleWhileRevalidate",
-            options: { cacheName: "pizzashop-api-cache" },
-          },
-          {
-            urlPattern: ({ request }) => request.destination === "image",
+            urlPattern: ({ request, sameOrigin }) => sameOrigin && request.destination === "image",
             handler: "CacheFirst",
             options: { cacheName: "pizzashop-images", expiration: { maxEntries: 60 } },
           },

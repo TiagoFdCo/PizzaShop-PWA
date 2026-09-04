@@ -1,20 +1,23 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { login as loginService, logout as logoutService } from "../services/authService";
-import type { AdminCredentials, AdminSession } from "../services/authService";
+import { setAuthToken } from "../services/api";
+import type { LoginCredentials, StaffSession } from "../services/authService";
+import type { StaffRole } from "../types/staff";
 
 interface AuthState {
-  session: AdminSession | null;
+  session: StaffSession | null;
   loading: boolean;
   error: string | null;
   isAuthenticated: boolean;
-  login: (credentials: AdminCredentials) => Promise<void>;
+  login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => void;
+  hasRole: (roles: StaffRole[]) => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       session: null,
       loading: false,
       error: null,
@@ -33,7 +36,16 @@ export const useAuthStore = create<AuthState>()(
         logoutService();
         set({ session: null, isAuthenticated: false });
       },
+      hasRole: (roles) => {
+        const role = get().session?.staff.role;
+        return !!role && roles.includes(role);
+      },
     }),
-    { name: "pizzashop-admin-auth" }
+    {
+      name: "pizzashop-staff-auth",
+      onRehydrateStorage: () => (state) => {
+        if (state?.session?.token) setAuthToken(state.session.token);
+      },
+    }
   )
 );

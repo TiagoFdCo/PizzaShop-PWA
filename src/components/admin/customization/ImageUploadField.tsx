@@ -1,5 +1,6 @@
 import { useRef, useState, type ChangeEvent } from "react";
-import { ImagePlus, X } from "lucide-react";
+import { ImagePlus, X, Loader2 } from "lucide-react";
+import { uploadFile } from "../../../services/api";
 
 const MAX_FILE_SIZE_MB = 2;
 
@@ -22,8 +23,9 @@ export function ImageUploadField({
 }: ImageUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
-  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = ""; // permite selecionar o mesmo arquivo de novo depois
     if (!file) return;
@@ -38,14 +40,15 @@ export function ImageUploadField({
     }
 
     setLocalError(null);
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        onChange(reader.result);
-      }
-    };
-    reader.onerror = () => setLocalError("Não foi possível ler o arquivo");
-    reader.readAsDataURL(file);
+    setUploading(true);
+    try {
+      const url = await uploadFile(file);
+      onChange(url);
+    } catch (e) {
+      setLocalError(e instanceof Error ? e.message : "Não foi possível enviar a imagem.");
+    } finally {
+      setUploading(false);
+    }
   }
 
   return (
@@ -56,7 +59,9 @@ export function ImageUploadField({
         <div
           className={`flex ${previewClassName} shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-gray-300 bg-gray-50`}
         >
-          {value ? (
+          {uploading ? (
+            <Loader2 className="animate-spin text-gray-300" size={22} />
+          ) : value ? (
             <img src={value} alt={label} className="h-full w-full object-cover" />
           ) : (
             <ImagePlus className="text-gray-300" size={22} />
@@ -68,11 +73,12 @@ export function ImageUploadField({
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="btn-secondary px-3 py-1.5 text-xs"
+              disabled={uploading}
+              className="btn-secondary px-3 py-1.5 text-xs disabled:opacity-50"
             >
-              Enviar imagem
+              {uploading ? "Enviando..." : "Enviar imagem"}
             </button>
-            {value && (
+            {value && !uploading && (
               <button
                 type="button"
                 onClick={() => onChange("")}

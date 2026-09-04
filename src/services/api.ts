@@ -1,7 +1,5 @@
-// Única camada autorizada a chamar fetch (100% fetch nativo — Axios é proibido pelo enunciado).
-// Centraliza base URL, headers e tratamento de erro HTTP/JSON para todos os outros services.
-
-const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3001";
+const REAL_API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+const MOCK_API_BASE_URL = import.meta.env.VITE_MOCK_API_URL ?? "http://localhost:3001";
 
 export class ApiError extends Error {
   status: number;
@@ -12,25 +10,79 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+let authToken: string | null = null;
+export function setAuthToken(token: string | null): void {
+  authToken = token;
+}
+
+interface ApiFetchOptions extends RequestInit {
+  useMockApi?: boolean; // true só pra /orders, até o P2 terminar os endpoints reais
+}
+
+export async function apiFetch<T>(path: string, options?: ApiFetchOptions): Promise<T> {
+  const base = options?.useMockApi ? MOCK_API_BASE_URL : REAL_API_BASE_URL;
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (authToken) headers.Authorization = `Bearer ${authToken}`;
+
   let res: Response;
   try {
-    res = await fetch(`${BASE_URL}${path}`, {
-      headers: { "Content-Type": "application/json" },
+    res = await fetch(`${base}${path}`, {
       ...options,
+      headers: { ...headers, ...(options?.headers as Record<string, string> | undefined) },
     });
   } catch {
-    throw new ApiError(
-      "Não foi possível conectar à API mock. Verifique se ela está rodando (`npm run mock-api`).",
-      0
-    );
+    throw new ApiError(`Não foi possível conectar à API (${base}). Verifique se ela está rodando.`, 0);
   }
 
   if (!res.ok) {
-    throw new ApiError(`Erro ${res.status} ao acessar ${path}`, res.status);
+    let message = `Erro ${res.status} ao acessar ${path}`;
+    try {
+      const body = await res.clone().json();
+      if (typeof body?.detail === "string") message = body.detail;
+    } catch {
+      // corpo não era JSON
+    }
+    throw new ApiError(message, res.status);
   }
 
-  // DELETE geralmente retorna corpo vazio
   const text = await res.text();
-  return (text ? JSON.parse(text) : undefined) as T;
+  if (!text) return undefined as T;
+
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new ApiError(`A API retornou uma resposta inválida para ${path}`, res.status);
+  }
+}
+
+/** Upload de arquivo (multipart) — usado pelo ImageUploadField. Sempre vai
+ * pro backend real, nunca pro mock (json-server não sabe lidar com arquivos). */
+export async function uploadFile(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const headers: Record<string, string> = {};
+  if (authToken) headers.Authorization = `Bearer ${authToken}`;
+  // Sem Content-Type manual: o navegador define o boundary do multipart sozinho.
+
+  let res: Response;
+  try {
+    res = await fetch(`${REAL_API_BASE_URL}/uploads`, { method: "POST", body: formData, headers });
+  } catch {
+    throw new ApiError(`Não foi possível conectar à API (${REAL_API_BASE_URL}).`, 0);
+  }
+
+  if (!res.ok) {
+    let message = `Erro ${res.status} ao enviar arquivo`;
+    try {
+      const body = await res.clone().json();
+      if (typeof body?.detail === "string") message = body.detail;
+    } catch {
+      // corpo não era JSON
+    }
+    throw new ApiError(message, res.status);
+  }
+
+  const data = (await res.json()) as { url: string };
+  return data.url;
 }

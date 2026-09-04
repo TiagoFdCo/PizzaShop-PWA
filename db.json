@@ -4,7 +4,7 @@
     "name": "Pizzaria Bella Napoli",
     "tagline": "Massa fermentada por 48h e forno a lenha, todos os dias.",
     "aboutText": "Desde 2010 servindo pizzas artesanais no bairro Centro. Ingredientes selecionados, massa de longa fermentação e muito carinho em cada assada.",
-    "logoUrl": "https://placehold.co/120x120/c0392b/ffffff?text=BN",
+    "logoUrl": "/bella-napoli-logo.png",
     "bannerUrl": "",
     "primaryColor": "#008000",
     "secondaryColor": "#272b33",
@@ -45,7 +45,8 @@
           "price": 6
         }
       ],
-      "id": "1"
+      "id": "1",
+      "basePrice": 39.9
     },
     {
       "id": "2",
@@ -105,5 +106,6 @@
       "availableToppings": []
     }
   ],
-  "orders": []
+  "orders": [],
+  "drivers": []
 }

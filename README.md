@@ -1,53 +1,58 @@
 # PizzaShop PWA
 
-E-commerce white-label de pizzas: um único código atende N pizzarias, já que tudo que muda entre clientes (cores, logo, cardápio, taxas, pagamentos) vive no `tenantConfig`, consumido em tempo real por toda a loja.
+E-commerce white-label de pizzas (React + TypeScript + Vite) com loja,
+carrinho, checkout, acompanhamento de pedido em tempo real e painéis de
+administrador, cozinha e entregador. O backend é uma API real em
+**FastAPI + PostgreSQL** (pasta `backend/`).
 
 ## Como rodar
 
+### 1. Backend (API + banco)
+
 ```bash
-npm install
+cd backend
+docker-compose up --build          # sobe Postgres + API já migrada em http://localhost:8000
+docker-compose exec api python -m scripts.seed   # popula cardápio, tenant e usuários padrão
 ```
 
-O projeto precisa de **dois processos** rodando ao mesmo tempo, em dois terminais:
+Swagger interativo: `http://localhost:8000/docs`. Detalhes e execução sem
+Docker em `backend/README.md`.
+
+### 2. Frontend
 
 ```bash
-# terminal 1 — API mock (json-server), na porta 3001
-npm run mock-api
-
-# terminal 2 — app React, na porta 5173
+npm install
+cp .env.example .env    # define VITE_API_URL=http://localhost:8000
 npm run dev
 ```
 
-Abra `http://localhost:5173`.
+Abra o endereço exibido pelo Vite (`http://localhost:5173`).
 
-- **Loja (cliente):** `/`, `/cardapio`, `/carrinho`, `/checkout`, `/pagamento`, `/pedido/:id`
-- **Painel (admin):** `/admin` — login: `admin` / `pizzashop123`
+> O `json-server` (`npm run mock-api`) permanece disponível como fallback de
+> desenvolvimento, mas o app fala com o backend FastAPI por padrão. Aponte
+> `VITE_API_URL` conforme o modo desejado (ver `.env.example`).
 
-A API mock (`db.json`, servida pelo `json-server`) expõe:
-- `GET/PUT /tenant` — configuração white-label (fonte única de verdade)
-- `GET/POST/PUT/DELETE /products` — cardápio
-- `GET/POST/PATCH /orders` — pedidos (admin escreve o status, cliente lê via polling)
+## Acessos (criados pelo seed)
 
-## Scripts
+| Papel      | Rota        | Usuário   | Senha        |
+|------------|-------------|-----------|--------------|
+| Admin      | `/admin`    | `admin`   | `admin123`   |
+| Cozinha    | `/cozinha`  | `cozinha` | `cozinha123` |
+| Entregador | `/entrega`  | `entrega` | `entrega123` |
 
-| Comando | O que faz |
-|---|---|
-| `npm run dev` | sobe o app em modo desenvolvimento |
-| `npm run mock-api` | sobe a API REST mock (json-server) na porta 3001 |
-| `npm run build` | build de produção (TypeScript + Vite) |
-| `npm run preview` | serve o build de produção localmente |
-| `npm test` | roda a suíte de testes (Vitest + Testing Library) uma vez |
-| `npm run test:watch` | testes em modo watch |
-| `npm run lint` | ESLint |
+Loja (cliente, sem login): `/`, `/cardapio`, `/produto/:id`, `/carrinho`,
+`/checkout`, `/pagamento`, `/pedido/:id`.
+
+## Verificações
+
+```bash
+npm run lint
+npm run build     # tsc -b && vite build
+npm test          # Vitest + Testing Library
+```
 
 ## PWA
 
-O app é instalável (manifest + service worker via `vite-plugin-pwa`) e mantém o cardápio e a configuração da loja em cache (`StaleWhileRevalidate`) para funcionamento offline em modo leitura. Para testar o comportamento real de PWA (instalação, cache), rode `npm run build && npm run preview` — o service worker não é registrado em modo `dev`.
-
-## Estrutura
-
-Ver `types/`, `services/`, `store/`, `hooks/`, `context/`, `components/`, `pages/`, `lib/` dentro de `src/` — cada camada tem uma responsabilidade única (tipos → chamadas de API → estado global → composição de UI). Detalhes de arquitetura no plano de execução do projeto.
-
-## Testes
-
-`tests/unit/` cobre `lib/` e `store/useCartStore`; `tests/components/` cobre componentes de UI (`ProductCard`, `OrderStatusTracker`) com Testing Library.
+Instalável (manifest + service worker via `vite-plugin-pwa`), com cache
+`StaleWhileRevalidate` de cardápio e configuração da loja. O service worker
+só é registrado no build de produção: `npm run build && npm run preview`.

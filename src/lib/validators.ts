@@ -26,6 +26,8 @@ export const themeSchema = z.object({
   secondaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Cor deve estar em formato hex #RRGGBB"),
   address: z.string().min(1, "Informe o endereço"),
   openingHours: z.string().min(1, "Informe o horário de funcionamento"),
+  whatsapp: z.string(),
+  instagram: z.string(),
   deliveryFee: z.coerce.number().min(0, "Taxa não pode ser negativa"),
   deliveryRadiusKm: z.coerce.number().min(0, "Raio não pode ser negativo"),
   avgPrepTimeMin: z.coerce.number().min(0, "Tempo não pode ser negativo"),

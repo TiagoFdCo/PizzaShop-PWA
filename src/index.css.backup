@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Fallback (loja "demo") — sobrescrito em runtime por useTheme() com base no tenantConfig */
+  --color-primary: 192 57 43;   /* #C0392B */
+  --color-secondary: 39 43 51;  /* #272B33 */
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-[#fff8f0] text-gray-800 antialiased;
+}
+
+/* Foco visível para navegação por teclado (acessibilidade) */
+:focus-visible {
+  outline: 2px solid rgb(var(--color-primary));
+  outline-offset: 2px;
+}
+
+@layer components {
+  .input {
+    @apply w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-full border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50;
+  }
+  .card {
+    @apply rounded-xl border border-gray-200 bg-white p-4 shadow-sm;
+  }
+}

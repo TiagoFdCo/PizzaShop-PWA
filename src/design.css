@@ -1,0 +1,70 @@
+
+.pizza-shell {
+  width: min(1180px, calc(100% - 32px));
+  margin-inline: auto;
+}
+
+.pizza-section {
+  padding: 56px 0;
+}
+
+.pizza-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--pizza-red);
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.pizza-kicker::before {
+  content: "";
+  width: 24px;
+  height: 2px;
+  border-radius: 99px;
+  background: var(--pizza-gold);
+}
+
+.pizza-surface {
+  background: rgba(255,255,255,.78);
+  border: 1px solid rgba(234,223,211,.9);
+  border-radius: var(--pizza-radius);
+  box-shadow: var(--pizza-shadow);
+  backdrop-filter: blur(10px);
+}
+
+.pizza-price {
+  color: var(--pizza-red);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.pizza-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: #f8e7d0;
+  color: #6f3d1d;
+  font-size: .76rem;
+  font-weight: 700;
+}
+
+.pizza-gradient {
+  background:
+    radial-gradient(circle at 85% 15%, rgba(214,161,74,.22), transparent 13rem),
+    linear-gradient(135deg, #4b1513 0%, #8e201b 48%, #b52b25 100%);
+  color: white;
+}
+
+.pizza-gradient h1,
+.pizza-gradient h2 {
+  color: white;
+}
+
+@media (max-width: 720px) {
+  .pizza-shell { width: min(100% - 20px, 1180px); }
+  .pizza-section { padding: 36px 0; }
+}
