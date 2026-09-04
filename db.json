@@ -107,12 +107,5 @@
     }
   ],
   "orders": [],
-  "drivers": [
-    {
-      "name": "silva",
-      "username": "silva",
-      "password": "1234",
-      "id": 1
-    }
-  ]
+  "drivers": []
 }
