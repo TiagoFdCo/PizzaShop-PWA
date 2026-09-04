@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Plus, Trash2, Bike, CircleDot, CheckCircle2 } from "lucide-react";
 import type { Staff } from "../../types/staff";
 import type { Order } from "../../types/order";
-import { getDrivers, createDriver } from "../../services/driverService";
+import { getDrivers, createDriver, deleteDriver } from "../../services/driverService";
 import { getOrders } from "../../services/orderService";
 
 interface AddDriverForm {
@@ -92,13 +92,18 @@ export function DriversManagementPage() {
   }
 
   async function handleDelete(id: string) {
+    if (isOnRoute(id)) {
+      setError("Não é possível remover um entregador que está em rota.");
+      setDeletingId(null);
+      return;
+    }
     try {
-      // Backend ainda não tem DELETE /staff/:id — remove só da lista local
-      // e exibe aviso. Implemente quando o endpoint for criado.
-      alert(
-        "Remoção ainda não implementada no backend. O entregador foi ocultado da lista até a próxima recarga."
-      );
+      await deleteDriver(id);
       setDrivers((prev) => prev.filter((d) => d.id !== id));
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Não foi possível remover o entregador."
+      );
     } finally {
       setDeletingId(null);
     }

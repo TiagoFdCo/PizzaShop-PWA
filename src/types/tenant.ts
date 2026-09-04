@@ -11,6 +11,8 @@ export interface TenantConfig {
   secondaryColor: string;
   address: string;
   openingHours: string;
+  whatsapp: string;
+  instagram: string;
   deliveryFee: number;
   deliveryRadiusKm: number;
   avgPrepTimeMin: number;

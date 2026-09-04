@@ -1,3 +1,5 @@
+from pydantic import AliasChoices, Field
+
 from app.schemas.common import CamelModel
 
 
@@ -26,9 +28,19 @@ class ProductBase(CamelModel):
 class ProductInput(ProductBase):
     """Payload de POST/PUT /products."""
 
-    available_toppings: list[ToppingInput] = []
+    available_toppings: list[ToppingInput] = Field(
+        default=[],
+        validation_alias=AliasChoices("availableToppings", "available_toppings"),
+    )
 
 
 class ProductOut(ProductBase):
     id: str
-    available_toppings: list[ToppingOut] = []
+    # O ORM expõe o relacionamento como `toppings`; o JSON usa `availableToppings`.
+    # AliasChoices lê de ambos (from_attributes pega `toppings` do ORM);
+    # serialization_alias garante a saída em camelCase pro front.
+    available_toppings: list[ToppingOut] = Field(
+        default=[],
+        validation_alias=AliasChoices("toppings", "availableToppings", "available_toppings"),
+        serialization_alias="availableToppings",
+    )

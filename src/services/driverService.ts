@@ -23,8 +23,5 @@ export async function createDriver(data: {
 }
 
 export async function deleteDriver(id: string): Promise<void> {
-  // O backend não tem DELETE /staff/:id ainda.
-  // Quando implementado, descomentar:
-  // await apiFetch(`${STAFF_ENDPOINT}/${id}`, { method: "DELETE" });
-  throw new Error("Remoção de entregadores ainda não implementada no backend.");
+  await apiFetch<void>(`${STAFF_ENDPOINT}/${id}`, { method: "DELETE" });
 }

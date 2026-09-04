@@ -133,6 +133,18 @@ export function ThemeEditor() {
           placeholder="18h às 23h"
           error={errors.openingHours?.message}
         />
+        <Input
+          label="WhatsApp"
+          {...register("whatsapp")}
+          placeholder="(00) 00000-0000"
+          error={errors.whatsapp?.message}
+        />
+        <Input
+          label="Instagram"
+          {...register("instagram")}
+          placeholder="@suapizzaria"
+          error={errors.instagram?.message}
+        />
       </FormSection>
 
       <FormSection

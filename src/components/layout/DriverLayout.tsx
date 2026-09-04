@@ -7,10 +7,9 @@ interface DriverLayoutProps {
 
 export function DriverLayout({ children }: DriverLayoutProps) {
   const session = useAuthStore((s) => s.session);
-  const clearSession = useAuthStore((s) => s.clearSession);
+  const logout = useAuthStore((s) => s.logout);
 
-  // session.name vem do ExtendedSession (campo adicionado ao store)
-  const driverName = session?.name ?? session?.username ?? "Entregador";
+  const driverName = session?.staff.name ?? session?.staff.username ?? "Entregador";
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col">
@@ -31,7 +30,7 @@ export function DriverLayout({ children }: DriverLayoutProps) {
         </div>
 
         <button
-          onClick={clearSession}
+          onClick={logout}
           className="flex items-center gap-1.5 text-zinc-500 hover:text-zinc-300 transition-colors text-sm py-1 px-2 rounded-md hover:bg-zinc-800"
         >
           <LogOut size={15} />

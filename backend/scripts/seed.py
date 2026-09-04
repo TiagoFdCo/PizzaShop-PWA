@@ -131,27 +131,49 @@ def seed_staff(db) -> None:
         )
 
 
+def _resolve_db_json(explicit: Path | None) -> Path:
+    """Encontra o db.json de forma robusta a host e container.
+
+    No host, scripts/seed.py fica em backend/scripts/, e o db.json pode estar
+    em backend/ ou na raiz do projeto (um nível acima). No container do
+    docker-compose, backend/ é montado como /app, então "um nível acima" cai
+    fora do projeto — por isso tentamos vários candidatos em vez de assumir um.
+    """
+    if explicit is not None:
+        if explicit.exists():
+            return explicit
+        raise FileNotFoundError(f"db.json não encontrado em '{explicit}'.")
+
+    here = Path(__file__).resolve()
+    candidates = [
+        here.parent.parent / "db.json",           # backend/db.json  (container: /app/db.json)
+        here.parent.parent.parent / "db.json",    # raiz do projeto (host, um nível acima de backend/)
+        Path.cwd() / "db.json",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+
+    tentativas = "\n  ".join(str(c) for c in candidates)
+    raise FileNotFoundError(
+        "db.json não encontrado. Locais tentados:\n  "
+        + tentativas
+        + "\nPasse --db-json <caminho> explicitamente."
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--db-json",
         type=Path,
-        # Procura db.json na raiz do projeto (um nível acima de backend/)
-        default=Path(__file__).resolve().parent.parent / "db.json",
-        help="Caminho pro db.json (default: ../../db.json relativo a scripts/seed.py)",
+        default=None,
+        help="Caminho pro db.json. Se omitido, procura em locais conhecidos "
+        "(backend/db.json, raiz do projeto, diretório atual).",
     )
     args = parser.parse_args()
 
-    if not args.db_json.exists():
-        # Fallback: db.json dentro de backend/ (cópia usada no container Docker)
-        fallback = Path(__file__).resolve().parent.parent / "backend" / "db.json"
-        if fallback.exists():
-            args.db_json = fallback
-        else:
-            raise FileNotFoundError(
-                f"db.json não encontrado em '{args.db_json}'. "
-                "Passe --db-json <caminho> ou copie o arquivo para o local esperado."
-            )
+    args.db_json = _resolve_db_json(args.db_json)
 
     print(f"\n=== Seed — lendo '{args.db_json}' ===\n")
     data = load_db_json(args.db_json)
