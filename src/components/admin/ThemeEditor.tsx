@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm, Controller, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTenantStore } from "../../store/useTenantStore";
@@ -12,6 +12,7 @@ import { ImageUploadField } from "./customization/ImageUploadField";
 export function ThemeEditor() {
   const tenant = useTenantStore((state) => state.tenant);
   const saveTenant = useTenantStore((state) => state.saveTenant);
+  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   const {
     register,
@@ -29,7 +30,16 @@ export function ThemeEditor() {
 
   async function onSubmit(data: ThemeFormData) {
     if (!tenant) return;
-    await saveTenant({ ...tenant, ...data });
+    setFeedback(null);
+    try {
+      await saveTenant({ ...tenant, ...data });
+      setFeedback({ type: "success", message: "Alterações salvas com sucesso." });
+    } catch (e) {
+      setFeedback({
+        type: "error",
+        message: e instanceof Error ? e.message : "Não foi possível salvar as alterações.",
+      });
+    }
   }
 
   if (!tenant) return null;
@@ -159,9 +169,15 @@ export function ThemeEditor() {
         />
       </FormSection>
 
+      {feedback && (
+        <p className={`text-sm ${feedback.type === "success" ? "text-green-600" : "text-red-500"}`}>
+          {feedback.message}
+        </p>
+      )}
+
       <Button type="submit" disabled={isSubmitting || !isDirty}>
         {isSubmitting ? "Salvando..." : "Salvar alterações"}
       </Button>
     </form>
-  );  
+  );
 }

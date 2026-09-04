@@ -54,3 +54,35 @@ export async function apiFetch<T>(path: string, options?: ApiFetchOptions): Prom
     throw new ApiError(`A API retornou uma resposta inválida para ${path}`, res.status);
   }
 }
+
+/** Upload de arquivo (multipart) — usado pelo ImageUploadField. Sempre vai
+ * pro backend real, nunca pro mock (json-server não sabe lidar com arquivos). */
+export async function uploadFile(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const headers: Record<string, string> = {};
+  if (authToken) headers.Authorization = `Bearer ${authToken}`;
+  // Sem Content-Type manual: o navegador define o boundary do multipart sozinho.
+
+  let res: Response;
+  try {
+    res = await fetch(`${REAL_API_BASE_URL}/uploads`, { method: "POST", body: formData, headers });
+  } catch {
+    throw new ApiError(`Não foi possível conectar à API (${REAL_API_BASE_URL}).`, 0);
+  }
+
+  if (!res.ok) {
+    let message = `Erro ${res.status} ao enviar arquivo`;
+    try {
+      const body = await res.clone().json();
+      if (typeof body?.detail === "string") message = body.detail;
+    } catch {
+      // corpo não era JSON
+    }
+    throw new ApiError(message, res.status);
+  }
+
+  const data = (await res.json()) as { url: string };
+  return data.url;
+}
