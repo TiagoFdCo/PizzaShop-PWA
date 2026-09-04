@@ -19,7 +19,12 @@ class Settings(BaseSettings):
     JWT_EXPIRE_MINUTES: int = 480  # 8h — cobre um turno de trabalho da cozinha/entrega
 
     # CORS — origem do front (Vite dev server / build hospedado)
-    CORS_ORIGINS: list[str] = ["http://localhost:5173"]
+    CORS_ORIGINS: list[str] = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
+    ]
 
 
 settings = Settings()
