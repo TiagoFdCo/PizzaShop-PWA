@@ -1,0 +1,3 @@
+# Frontend — aponta para o backend FastAPI (porta 8000)
+# Após alterar este arquivo, reinicie o Vite: npm run dev
+VITE_API_URL=http://localhost:8000

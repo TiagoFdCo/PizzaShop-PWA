@@ -9,7 +9,7 @@ Postgres certo):
 
 Idempotente: se já existir um tenant, o script pula a criação de
 tenant/produtos (evita duplicar o cardápio a cada `docker-compose up`).
-Sempre garante que o admin padrão exista.
+Sempre garante que os usuários padrão existam.
 """
 import argparse
 import json
@@ -21,8 +21,30 @@ from app.models.product import Product, ProductTopping
 from app.models.staff import Staff, StaffRole
 from app.models.tenant import Tenant
 
-DEFAULT_ADMIN_USERNAME = "admin"
-DEFAULT_ADMIN_PASSWORD = "admin123"  # troque após o primeiro login em produção
+# -----------------------------------------------------------------------
+# Usuários padrão criados pelo seed
+# (troque as senhas após o primeiro login em produção)
+# -----------------------------------------------------------------------
+DEFAULT_STAFF = [
+    {
+        "name": "Administrador",
+        "role": StaffRole.admin,
+        "username": "admin",
+        "password": "admin123",
+    },
+    {
+        "name": "Cozinheiro",
+        "role": StaffRole.cozinha,
+        "username": "cozinha",
+        "password": "cozinha123",
+    },
+    {
+        "name": "Entregador",
+        "role": StaffRole.entrega,
+        "username": "entrega",
+        "password": "entrega123",
+    },
+]
 
 
 def load_db_json(path: Path) -> dict:
@@ -33,7 +55,7 @@ def load_db_json(path: Path) -> dict:
 def seed_tenant(db, data: dict) -> Tenant:
     existing = db.query(Tenant).first()
     if existing is not None:
-        print(f"Tenant já existe ({existing.name}), pulando criação.")
+        print(f"  Tenant já existe ({existing.name}), pulando criação.")
         return existing
 
     t = data["tenant"]
@@ -58,16 +80,17 @@ def seed_tenant(db, data: dict) -> Tenant:
     db.add(tenant)
     db.commit()
     db.refresh(tenant)
-    print(f"Tenant criado: {tenant.name}")
+    print(f"  Tenant criado: {tenant.name}")
     return tenant
 
 
 def seed_products(db, tenant: Tenant, data: dict) -> None:
     if db.query(Product).filter(Product.tenant_id == tenant.id).count() > 0:
-        print("Produtos já existem, pulando criação.")
+        print("  Produtos já existem, pulando criação.")
         return
 
-    for p in data.get("products", []):
+    products = data.get("products", [])
+    for p in products:
         product = Product(
             tenant_id=tenant.id,
             name=p.get("name", ""),
@@ -78,29 +101,34 @@ def seed_products(db, tenant: Tenant, data: dict) -> None:
             available_sizes=p.get("availableSizes", []),
         )
         product.toppings = [
-            ProductTopping(name=t["name"], price=t["price"]) for t in p.get("availableToppings", [])
+            ProductTopping(name=t["name"], price=t["price"])
+            for t in p.get("availableToppings", [])
         ]
         db.add(product)
 
     db.commit()
-    print(f"{len(data.get('products', []))} produtos criados.")
+    print(f"  {len(products)} produto(s) criado(s).")
 
 
-def seed_default_admin(db) -> None:
-    existing = db.query(Staff).filter(Staff.username == DEFAULT_ADMIN_USERNAME).first()
-    if existing is not None:
-        print("Admin padrão já existe, pulando criação.")
-        return
+def seed_staff(db) -> None:
+    for entry in DEFAULT_STAFF:
+        existing = db.query(Staff).filter(Staff.username == entry["username"]).first()
+        if existing is not None:
+            print(f"  Usuário '{entry['username']}' já existe, pulando.")
+            continue
 
-    admin = Staff(
-        name="Administrador",
-        role=StaffRole.admin,
-        username=DEFAULT_ADMIN_USERNAME,
-        password_hash=hash_password(DEFAULT_ADMIN_PASSWORD),
-    )
-    db.add(admin)
-    db.commit()
-    print(f"Admin padrão criado: usuário='{DEFAULT_ADMIN_USERNAME}' senha='{DEFAULT_ADMIN_PASSWORD}' (troque depois)")
+        staff = Staff(
+            name=entry["name"],
+            role=entry["role"],
+            username=entry["username"],
+            password_hash=hash_password(entry["password"]),
+        )
+        db.add(staff)
+        db.commit()
+        print(
+            f"  Usuário criado: username='{entry['username']}'"
+            f"  senha='{entry['password']}'  role={entry['role'].value}"
+        )
 
 
 def main() -> None:
@@ -108,20 +136,44 @@ def main() -> None:
     parser.add_argument(
         "--db-json",
         type=Path,
+        # Procura db.json na raiz do projeto (um nível acima de backend/)
         default=Path(__file__).resolve().parent.parent / "db.json",
-        help="Caminho pro db.json do front (default: ../db.json a partir de scripts/, ou seja backend/db.json)",
+        help="Caminho pro db.json (default: ../../db.json relativo a scripts/seed.py)",
     )
     args = parser.parse_args()
 
+    if not args.db_json.exists():
+        # Fallback: db.json dentro de backend/ (cópia usada no container Docker)
+        fallback = Path(__file__).resolve().parent.parent / "backend" / "db.json"
+        if fallback.exists():
+            args.db_json = fallback
+        else:
+            raise FileNotFoundError(
+                f"db.json não encontrado em '{args.db_json}'. "
+                "Passe --db-json <caminho> ou copie o arquivo para o local esperado."
+            )
+
+    print(f"\n=== Seed — lendo '{args.db_json}' ===\n")
     data = load_db_json(args.db_json)
 
     db = SessionLocal()
     try:
+        print("[1/3] Tenant")
         tenant = seed_tenant(db, data)
+
+        print("[2/3] Produtos")
         seed_products(db, tenant, data)
-        seed_default_admin(db)
+
+        print("[3/3] Usuários padrão")
+        seed_staff(db)
     finally:
         db.close()
+
+    print("\n=== Seed concluído! ===")
+    print("Credenciais de acesso:")
+    for entry in DEFAULT_STAFF:
+        print(f"  [{entry['role'].value:8s}]  {entry['username']} / {entry['password']}")
+    print()
 
 
 if __name__ == "__main__":
