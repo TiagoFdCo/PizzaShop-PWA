@@ -1,7 +1,6 @@
 ﻿import type { PaymentMethod } from "./tenant";
 import type { Size } from "./product";
 
-// â”€â”€â”€ Status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export type OrderStatus =
   | "recebido"
   | "preparo"
@@ -17,8 +16,8 @@ export const ORDER_STATUS_FLOW: OrderStatus[] = [
   "saiu_para_entrega",
   "entregue",
 ];
-// falha_entrega fica FORA do flow linear â€” Ã© um desvio a partir de
-// "saiu_para_entrega", nÃ£o um prÃ³ximo passo. Tratado Ã  parte na UI.
+// falha_entrega fica FORA do flow linear — é um desvio a partir de
+// "saiu_para_entrega", não um próximo passo. Tratado à parte na UI.
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   recebido: "Pedido recebido",
@@ -29,7 +28,6 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   falha_entrega: "Falha na entrega",
 };
 
-// â”€â”€â”€ Staff (P3) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export type StaffRole = "admin" | "cozinha" | "entrega";
 
 export interface OrderStaffRef {
@@ -37,7 +35,6 @@ export interface OrderStaffRef {
   name: string;
 }
 
-// â”€â”€â”€ Falha de entrega (P3) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export type DeliveryFailureReason =
   | "cliente_ausente"
   | "endereco_nao_encontrado"
@@ -46,10 +43,10 @@ export type DeliveryFailureReason =
   | "outro";
 
 export const DELIVERY_FAILURE_REASON_LABELS: Record<DeliveryFailureReason, string> = {
-  cliente_ausente: "Cliente ausente no endereÃ§o",
-  endereco_nao_encontrado: "EndereÃ§o nÃ£o encontrado",
+  cliente_ausente: "Cliente ausente no endereço",
+  endereco_nao_encontrado: "Endereço não encontrado",
   cliente_recusou: "Cliente recusou o pedido",
-  problema_veiculo: "Problema com o veÃ­culo",
+  problema_veiculo: "Problema com o veículo",
   outro: "Outro motivo",
 };
 
@@ -59,14 +56,6 @@ export interface DeliveryFailure {
   reportedAt: string;
 }
 
-// â”€â”€â”€ Carrinho â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// ReferÃªncia leve embutida no pedido (evita 1 fetch extra por pedido nas telas)
-export interface OrderStaffRef {
-  id: string;
-  name: string;
-}
-
-// Um item dentro do carrinho/pedido: uma pizza jÃ¡ customizada (tamanho + adicionais)
 export interface CartItem {
   cartItemId: string;
   productId: string;
@@ -85,7 +74,6 @@ export interface CustomerInfo {
   phone: string;
 }
 
-// â”€â”€â”€ Pedido â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export interface Order {
   id: string;
   items: CartItem[];
@@ -102,5 +90,4 @@ export interface Order {
   deliveryFailure?: DeliveryFailure;
 }
 
-// Payload para criar um pedido (id/status/createdAt sÃ£o definidos pela API mock)
 export type OrderInput = Omit<Order, "id" | "status" | "createdAt" | "cook" | "driver" | "deliveryFailure">;

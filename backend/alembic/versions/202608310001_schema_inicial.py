@@ -17,40 +17,48 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.execute(
-        "DO $$ BEGIN "
-        "CREATE TYPE staff_role AS ENUM ('admin', 'cozinha', 'entrega'); "
-        "EXCEPTION WHEN duplicate_object THEN null; END $$;"
-    )
-    op.execute(
-        "DO $$ BEGIN "
-        "CREATE TYPE order_status AS ENUM "
-        "('recebido', 'preparo', 'pronto_entrega', 'saiu_para_entrega', 'entregue', 'falha_entrega'); "
-        "EXCEPTION WHEN duplicate_object THEN null; END $$;"
-    )
-    op.execute(
-        "DO $$ BEGIN "
-        "CREATE TYPE payment_method AS ENUM ('pix', 'cartao', 'dinheiro'); "
-        "EXCEPTION WHEN duplicate_object THEN null; END $$;"
-    )
-    op.execute(
-        "DO $$ BEGIN "
-        "CREATE TYPE delivery_failure_reason AS ENUM "
-        "('cliente_ausente', 'endereco_nao_encontrado', 'cliente_recusou', 'problema_veiculo', 'outro'); "
-        "EXCEPTION WHEN duplicate_object THEN null; END $$;"
-    )
+    bind = op.get_bind()
 
-    staff_role = postgresql.ENUM(
-        "admin", "cozinha", "entrega", name="staff_role", create_type=False,
-    )
-    order_status = postgresql.ENUM(
+    bind.execute(sa.text("""
+        DO $$ BEGIN
+            CREATE TYPE staff_role AS ENUM ('admin', 'cozinha', 'entrega');
+        EXCEPTION
+            WHEN duplicate_object THEN null;
+        END $$;
+    """))
+    bind.execute(sa.text("""
+        DO $$ BEGIN
+            CREATE TYPE order_status AS ENUM (
+                'recebido', 'preparo', 'pronto_entrega', 'saiu_para_entrega', 'entregue', 'falha_entrega'
+            );
+        EXCEPTION
+            WHEN duplicate_object THEN null;
+        END $$;
+    """))
+    bind.execute(sa.text("""
+        DO $$ BEGIN
+            CREATE TYPE payment_method AS ENUM ('pix', 'cartao', 'dinheiro');
+        EXCEPTION
+            WHEN duplicate_object THEN null;
+        END $$;
+    """))
+    bind.execute(sa.text("""
+        DO $$ BEGIN
+            CREATE TYPE delivery_failure_reason AS ENUM (
+                'cliente_ausente', 'endereco_nao_encontrado', 'cliente_recusou', 'problema_veiculo', 'outro'
+            );
+        EXCEPTION
+            WHEN duplicate_object THEN null;
+        END $$;
+    """))
+
+    staff_role = sa.Enum("admin", "cozinha", "entrega", name="staff_role", create_type=False)
+    order_status = sa.Enum(
         "recebido", "preparo", "pronto_entrega", "saiu_para_entrega", "entregue", "falha_entrega",
         name="order_status", create_type=False,
     )
-    payment_method = postgresql.ENUM(
-        "pix", "cartao", "dinheiro", name="payment_method", create_type=False,
-    )
-    delivery_failure_reason = postgresql.ENUM(
+    payment_method = sa.Enum("pix", "cartao", "dinheiro", name="payment_method", create_type=False)
+    delivery_failure_reason = sa.Enum(
         "cliente_ausente", "endereco_nao_encontrado", "cliente_recusou", "problema_veiculo", "outro",
         name="delivery_failure_reason", create_type=False,
     )
@@ -141,7 +149,9 @@ def upgrade() -> None:
     op.create_table(
         "order_item_topping",
         sa.Column("id", sa.String(length=36), primary_key=True),
-        sa.Column("order_item_id", sa.String(length=36), sa.ForeignKey("order_item.id", ondelete="CASCADE"), nullable=False),
+        sa.Column(
+            "order_item_id", sa.String(length=36), sa.ForeignKey("order_item.id", ondelete="CASCADE"), nullable=False
+        ),
         sa.Column("name", sa.String(length=120), nullable=False),
         sa.Column("price", sa.Float(), nullable=False),
     )

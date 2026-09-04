@@ -1,72 +1,51 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { login as loginService, logout as logoutService } from "../services/authService";
-import type { AdminCredentials, AdminSession } from "../services/authService";
-import type { StaffRole } from "../types/order";
-
-// Sessão estendida: admin existente + campos de driver (P3)
-// id e name ficam opcionais para não quebrar o admin atual que não os tem
-export interface ExtendedSession extends AdminSession {
-  id?: string;
-  name?: string;
-  role?: StaffRole;
-}
+import { setAuthToken } from "../services/api";
+import type { LoginCredentials, StaffSession } from "../services/authService";
+import type { StaffRole } from "../types/staff";
 
 interface AuthState {
-  session: ExtendedSession | null;
+  session: StaffSession | null;
   loading: boolean;
   error: string | null;
   isAuthenticated: boolean;
-  login: (credentials: AdminCredentials) => Promise<void>;
+  login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => void;
-  // P3: seta sessão do entregador diretamente (sem precisar de login por enquanto)
-  setDriverSession: (id: string, name: string) => void;
-  clearSession: () => void;
+  hasRole: (roles: StaffRole[]) => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       session: null,
       loading: false,
       error: null,
       isAuthenticated: false,
-
       login: async (credentials) => {
         set({ loading: true, error: null });
         try {
           const session = await loginService(credentials);
-          set({ session: { ...session, role: "admin" }, isAuthenticated: true, loading: false });
+          set({ session, isAuthenticated: true, loading: false });
         } catch (e) {
           set({ error: (e as Error).message, loading: false, isAuthenticated: false });
           throw e;
         }
       },
-
       logout: () => {
         logoutService();
         set({ session: null, isAuthenticated: false });
       },
-
-      // P3: usado pela tela do entregador para simular login
-      setDriverSession: (id, name) => {
-        set({
-          session: {
-            username: name,
-            token: `driver-mock-${id}`,
-            id,
-            name,
-            role: "entrega",
-          },
-          isAuthenticated: true,
-        });
-      },
-
-      clearSession: () => {
-        logoutService();
-        set({ session: null, isAuthenticated: false });
+      hasRole: (roles) => {
+        const role = get().session?.staff.role;
+        return !!role && roles.includes(role);
       },
     }),
-    { name: "pizzashop-admin-auth" }
+    {
+      name: "pizzashop-staff-auth",
+      onRehydrateStorage: () => (state) => {
+        if (state?.session?.token) setAuthToken(state.session.token);
+      },
+    }
   )
 );

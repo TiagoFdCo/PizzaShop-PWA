@@ -12,7 +12,7 @@ interface DriverGateProps {
 export function DriverGate({ login, app }: DriverGateProps) {
   const session = useAuthStore((s) => s.session);
 
-  if (session?.role === "entrega" && session.id) {
+  if (session?.staff.role === "entrega" && session.staff.id) {
     return <>{app}</>;
   }
 

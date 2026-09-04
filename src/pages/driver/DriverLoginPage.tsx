@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { Bike } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
-import { loginDriver } from "../../services/driverService";
 
 export function DriverLoginPage() {
-  const setDriverSession = useAuthStore((s) => s.setDriverSession);
+  const login = useAuthStore((s) => s.login);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -15,14 +14,9 @@ export function DriverLoginPage() {
     setLoading(true);
     setError(null);
     try {
-      const driver = await loginDriver(username, password);
-      if (!driver) {
-        setError("Usuário ou senha inválidos.");
-      } else {
-        setDriverSession(driver.id, driver.name);
-      }
+      await login({ username, password });
     } catch {
-      setError("Não foi possível conectar à API. Verifique se ela está rodando.");
+      setError("Usuário ou senha inválidos.");
     } finally {
       setLoading(false);
     }

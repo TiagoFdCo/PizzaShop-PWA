@@ -1,12 +1,12 @@
 ﻿import { Suspense, lazy } from "react";
 import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
-import { Spinner } from "./components/ui/Spinner";
-import { DriverGate } from "./components/DriverGate";
 import { RootLayout } from "./components/layout/RootLayout";
 import { StoreLayout } from "./components/layout/StoreLayout";
 import { AdminLayout } from "./components/layout/AdminLayout";
 import { KitchenLayout } from "./components/layout/KitchenLayout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { DriverGate } from "./components/DriverGate";
+import { Spinner } from "./components/ui/Spinner";
 
 // Loja
 const LandingPage = lazy(() => import("./pages/store/LandingPage").then((m) => ({ default: m.LandingPage })));
@@ -25,12 +25,12 @@ const AdminMenuManagementPage = lazy(() => import("./pages/admin/MenuManagementP
 const AdminOrdersManagementPage = lazy(() => import("./pages/admin/OrdersManagementPage").then((m) => ({ default: m.OrdersManagementPage })));
 const AdminDriversManagementPage = lazy(() => import("./pages/admin/DriversManagementPage").then((m) => ({ default: m.DriversManagementPage })));
 
-// Entregador
+// Cozinha (P2)
+const KitchenOrdersPage = lazy(() => import("./pages/kitchen/KitchenOrdersPage").then((m) => ({ default: m.KitchenOrdersPage })));
+
+// Entregador (P3)
 const DriverLoginPage = lazy(() => import("./pages/driver/DriverLoginPage").then((m) => ({ default: m.DriverLoginPage })));
 const DriverOrdersPage = lazy(() => import("./pages/driver/DriverOrdersPage").then((m) => ({ default: m.DriverOrdersPage })));
-
-// Cozinha
-const KitchenOrdersPage = lazy(() => import("./pages/kitchen/KitchenOrdersPage").then((m) => ({ default: m.KitchenOrdersPage })));
 
 function Fallback() {
   return <Spinner label="Carregando..." />;
@@ -40,7 +40,6 @@ export const router = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
-      // Loja (modo cliente)
       {
         element: <StoreLayout />,
         children: [
@@ -53,14 +52,13 @@ export const router = createBrowserRouter([
           { path: "/pedido/:id", element: <OrderTrackingPage /> },
         ],
       },
-      
       // Admin
       {
         path: "/admin",
         children: [
           { index: true, element: <AdminLoginPage /> },
           {
-            element: <ProtectedRoute />,
+            element: <ProtectedRoute allowedRoles={["admin"]} />,
             children: [
               {
                 element: <AdminLayout />,
@@ -76,11 +74,10 @@ export const router = createBrowserRouter([
           },
         ],
       },
-
-      // Cozinha
+      // Cozinha — protegida por role
       {
         path: "/cozinha",
-        element: <ProtectedRoute />, 
+        element: <ProtectedRoute allowedRoles={["cozinha"]} redirectTo="/admin" />,
         children: [
           {
             element: <KitchenLayout />,
@@ -91,16 +88,10 @@ export const router = createBrowserRouter([
           },
         ],
       },
-
       // Entregador — mostra login se não autenticado, pedidos se autenticado
       {
         path: "/entrega",
-        element: (
-          <DriverGate
-            login={<DriverLoginPage />}
-            app={<DriverOrdersPage />}
-          />
-        ),
+        element: <DriverGate login={<DriverLoginPage />} app={<DriverOrdersPage />} />,
       },
     ],
   },
