@@ -8,3 +8,8 @@ dist
 .env.*
 !.env.example
 
+_fase3_p1/
+fase3-p1-backend.zip
+commit-fase3-p1.ps1
+setup-fase3.ps1
+*.zip
