@@ -12,12 +12,13 @@ class StaffRole(str, enum.Enum):
     admin = "admin"
     cozinha = "cozinha"
     entrega = "entrega"
+    garcom = "garcom"  # Fase 3: atende o presencial (mesas/comandas)
 
 
 class Staff(Base):
     """
-    Funcionário que faz login no sistema (admin, cozinheiro ou entregador).
-    Cliente NÃO tem linha aqui — ele não autentica (ver Order.customer_*).
+    Funcionário que faz login no sistema (admin, cozinheiro, entregador ou
+    garçom). Cliente NÃO tem linha aqui — ele não autentica (ver Order.customer_*).
     """
 
     __tablename__ = "staff"
