@@ -15,9 +15,11 @@ import argparse
 import json
 from pathlib import Path
 
+import app.models  # noqa: F401  — registra todos os models antes de configurar os mappers
 from app.core.security import hash_password
 from app.db.session import SessionLocal
 from app.models.product import Product, ProductTopping
+from app.models.table import RestaurantTable, TableStatus
 from app.models.staff import Staff, StaffRole
 from app.models.tenant import Tenant
 
@@ -43,6 +45,12 @@ DEFAULT_STAFF = [
         "role": StaffRole.entrega,
         "username": "entrega",
         "password": "entrega123",
+    },
+    {
+        "name": "Garçom",
+        "role": StaffRole.garcom,
+        "username": "garcom",
+        "password": "garcom123",
     },
 ]
 
@@ -131,6 +139,32 @@ def seed_staff(db) -> None:
         )
 
 
+
+def seed_tables(db, tenant: Tenant, n: int = 6) -> None:
+    """Cria mesas 1..n se ainda não houver nenhuma (idempotente)."""
+    if db.query(RestaurantTable).filter(RestaurantTable.tenant_id == tenant.id).count() > 0:
+        print("  Mesas já existem, pulando criação.")
+        return
+    for numero in range(1, n + 1):
+        db.add(RestaurantTable(tenant_id=tenant.id, number=numero, seats=4, status=TableStatus.livre))
+    db.commit()
+    print(f"  {n} mesa(s) criada(s).")
+
+
+def seed_costs(db, tenant: Tenant, ratio: float = 0.45) -> None:
+    """Preenche o custo dos produtos que ainda estão zerados (ex.: 45% do preço)
+    pra o lucro do relatório do P4 fazer sentido na demo. Idempotente."""
+    produtos = db.query(Product).filter(Product.tenant_id == tenant.id).all()
+    alterados = 0
+    for prod in produtos:
+        if not prod.cost:  # 0 ou None
+            prod.cost = round(prod.base_price * ratio, 2)
+            alterados += 1
+    if alterados:
+        db.commit()
+    print(f"  Custo preenchido em {alterados} produto(s).")
+
+
 def _resolve_db_json(explicit: Path | None) -> Path:
     """Encontra o db.json de forma robusta a host e container.
 
@@ -180,14 +214,20 @@ def main() -> None:
 
     db = SessionLocal()
     try:
-        print("[1/3] Tenant")
+        print("[1/5] Tenant")
         tenant = seed_tenant(db, data)
 
-        print("[2/3] Produtos")
+        print("[2/5] Produtos")
         seed_products(db, tenant, data)
 
-        print("[3/3] Usuários padrão")
+        print("[3/5] Usuários padrão")
         seed_staff(db)
+
+        print("[4/5] Mesas (presencial)")
+        seed_tables(db, tenant)
+
+        print("[5/5] Custos dos produtos")
+        seed_costs(db, tenant)
     finally:
         db.close()
 

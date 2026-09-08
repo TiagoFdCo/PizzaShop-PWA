@@ -8,6 +8,7 @@ from app.models.order import (
     OrderItemTopping,
     OrderStatus,
 )
+from app.models.product import Product
 from app.models.staff import Staff, StaffRole
 from app.schemas.order import DeliveryFailureInput, OrderInput
 
@@ -49,6 +50,9 @@ def create_order(db: Session, tenant_id: str, data: OrderInput) -> Order:
     db.flush()
 
     for item_data in data.items:
+        product = db.get(Product, item_data.product_id)
+        cost = product.cost if product is not None else 0.0
+
         item = OrderItem(
             order_id=order.id,
             product_id=item_data.product_id,
@@ -56,6 +60,7 @@ def create_order(db: Session, tenant_id: str, data: OrderInput) -> Order:
             image_url=item_data.image_url,
             size=item_data.size,
             unit_price=item_data.unit_price,
+            cost=cost,  # Fase 3: snapshot do custo (D1)
             quantity=item_data.quantity,
             notes=item_data.notes,
         )
