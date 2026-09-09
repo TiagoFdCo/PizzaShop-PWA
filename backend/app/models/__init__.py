@@ -5,12 +5,20 @@ from app.models.order import (  # noqa: F401
     DeliveryFailure,
     DeliveryFailureReason,
     Order,
+    OrderChannel,
     OrderItem,
     OrderItemTopping,
     OrderStatus,
     PaymentMethod,
     ORDER_STATUS_FLOW,
 )
+from app.models.table import (  # noqa: F401
+    RestaurantTable,
+    Tab,
+    TableStatus,
+    TabStatus,
+)
+from app.models.rating import OrderRating  # noqa: F401
 
 __all__ = [
     "Tenant",
@@ -19,6 +27,7 @@ __all__ = [
     "Product",
     "ProductTopping",
     "Order",
+    "OrderChannel",
     "OrderItem",
     "OrderItemTopping",
     "DeliveryFailure",
@@ -26,4 +35,9 @@ __all__ = [
     "OrderStatus",
     "PaymentMethod",
     "ORDER_STATUS_FLOW",
+    "RestaurantTable",
+    "Tab",
+    "TableStatus",
+    "TabStatus",
+    "OrderRating",
 ]
