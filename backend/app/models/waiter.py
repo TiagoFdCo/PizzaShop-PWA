@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Enum as SAEnum, ForeignKey, Integer, String
+from sqlalchemy import DateTime, Enum as SAEnum, Float, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -16,56 +16,63 @@ if TYPE_CHECKING:
 class TableStatus(str, enum.Enum):
     livre = "livre"
     ocupada = "ocupada"
+    reservada = "reservada"
 
 
 class TabStatus(str, enum.Enum):
     aberta = "aberta"
+    fechada = "fechada"
     paga = "paga"
 
 
 class RestaurantTable(Base):
     __tablename__ = "restaurant_table"
+    __table_args__ = (UniqueConstraint("tenant_id", "number", name="uq_table_number_per_tenant"),)
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     tenant_id: Mapped[str] = mapped_column(String(36), ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False)
     number: Mapped[int] = mapped_column(Integer, nullable=False)
+    seats: Mapped[int | None] = mapped_column(Integer, nullable=True)
     status: Mapped[TableStatus] = mapped_column(
         SAEnum(TableStatus, name="table_status"), nullable=False, default=TableStatus.livre
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
     )
 
     tabs: Mapped[list["Tab"]] = relationship(back_populates="table")
 
 
 class Tab(Base):
-    """Comanda. 1 mesa : N comandas — mas só uma 'aberta' por mesa por vez
-    (regra aplicada em app/crud/waiter.py, não no schema do banco)."""
-
     __tablename__ = "tab"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    table_id: Mapped[str] = mapped_column(String(36), ForeignKey("restaurant_table.id", ondelete="CASCADE"), nullable=False)
-    waiter_id: Mapped[str] = mapped_column(String(36), ForeignKey("staff.id"), nullable=False)
+    tenant_id: Mapped[str] = mapped_column(String(36), ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False)
+    table_id: Mapped[str] = mapped_column(String(36), ForeignKey("restaurant_table.id"), nullable=False)
+    waiter_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("staff.id"), nullable=True)
     status: Mapped[TabStatus] = mapped_column(
         SAEnum(TabStatus, name="tab_status"), nullable=False, default=TabStatus.aberta
     )
     opened_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    total: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
 
     table: Mapped["RestaurantTable"] = relationship(back_populates="tabs")
-    waiter: Mapped["Staff"] = relationship()
+    waiter: Mapped["Staff | None"] = relationship()
     orders: Mapped[list["Order"]] = relationship(back_populates="tab")
 
 
 class OrderRating(Base):
-    """1:1 com Order — critério de aceite da #73 exige unicidade (uma nota por pedido)."""
-
     __tablename__ = "order_rating"
+    __table_args__ = (UniqueConstraint("order_id", name="uq_rating_order"),)
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    order_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("order.id", ondelete="CASCADE"), nullable=False, unique=True
-    )
-    stars: Mapped[int] = mapped_column(Integer, nullable=False)  # 1-5, validado no schema (Pydantic), não aqui
+    order_id: Mapped[str] = mapped_column(String(36), ForeignKey("order.id", ondelete="CASCADE"), nullable=False)
+    stars: Mapped[int] = mapped_column(Integer, nullable=False)
+    comment: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     order: Mapped["Order"] = relationship(back_populates="rating")
