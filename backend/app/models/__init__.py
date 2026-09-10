@@ -9,7 +9,15 @@ from app.models.order import (  # noqa: F401
     OrderItemTopping,
     OrderStatus,
     PaymentMethod,
+    OrderChannel,
     ORDER_STATUS_FLOW,
+)
+from app.models.waiter import (  # noqa: F401
+    RestaurantTable,
+    Tab,
+    TableStatus,
+    TabStatus,
+    OrderRating,
 )
 
 __all__ = [
@@ -25,5 +33,11 @@ __all__ = [
     "DeliveryFailureReason",
     "OrderStatus",
     "PaymentMethod",
+    "OrderChannel",
     "ORDER_STATUS_FLOW",
+    "RestaurantTable",
+    "Tab",
+    "TableStatus",
+    "TabStatus",
+    "OrderRating",
 ]
