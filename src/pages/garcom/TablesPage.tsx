@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { AlertCircle, RefreshCw, Utensils } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { TableCard } from "../../components/garcom/TableCard";
-import { listTables, updateTableStatus } from "../../services/tableService";
+import { listTables } from "../../services/tableService";
 import { openTab } from "../../services/tabService";
 import { useAuthStore } from "../../store/useAuthStore";
 import type { Table } from "../../types/table";
@@ -49,17 +49,8 @@ export function TablesPage() {
       setOpeningTableId(table.id);
       setError(null);
 
+      // O backend já altera a mesa para "ocupada" ao abrir a comanda.
       const tab = await openTab(table.id);
-
-      const updatedTable = await updateTableStatus(table.id, "ocupada");
-
-      setTables((currentTables) =>
-        currentTables.map((currentTable) =>
-          currentTable.id === updatedTable.id
-            ? updatedTable
-            : currentTable
-        )
-      );
 
       navigate(`/garcom/comanda/${tab.id}`);
     } catch (err) {
