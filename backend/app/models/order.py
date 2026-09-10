@@ -10,6 +10,7 @@ from app.db.base import Base
 
 if TYPE_CHECKING:
     from app.models.staff import Staff
+    from app.models.waiter import RestaurantTable, Tab, OrderRating
 
 
 class OrderStatus(str, enum.Enum):
@@ -21,9 +22,6 @@ class OrderStatus(str, enum.Enum):
     falha_entrega = "falha_entrega"
 
 
-# Fluxo linear "feliz" do pedido. falha_entrega é um desvio a partir de
-# saiu_para_entrega e fica FORA desta lista — quem usa isso pra desenhar
-# progresso (ex. rota /orders/{id}/dispatch) precisa tratar falha à parte.
 ORDER_STATUS_FLOW: list[OrderStatus] = [
     OrderStatus.recebido,
     OrderStatus.preparo,
@@ -47,18 +45,33 @@ class DeliveryFailureReason(str, enum.Enum):
     outro = "outro"
 
 
+class OrderChannel(str, enum.Enum):
+    """D3 do plano: pedido delivery ou presencial (dine_in)."""
+
+    delivery = "delivery"
+    dine_in = "dine_in"
+
+
 class Order(Base):
     """
-    Pedido. `cook_id`/`driver_id` são FKs de verdade pra staff (diferente do
-    mock em db.json, que embutia {id, name} pra evitar fetch extra — aqui o
-    JOIN resolve isso sem duplicar dado). Cliente não tem tabela própria:
-    dados soltos em customer_* porque ele não autentica no sistema.
+    Pedido. `cook_id`/`driver_id` são FKs de verdade pra staff. Cliente não
+    tem tabela própria: dados soltos em customer_* porque ele não autentica.
     """
 
     __tablename__ = "order"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     tenant_id: Mapped[str] = mapped_column(String(36), ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False)
+
+    # ── Fase 3 (D1 + D3) — campos batendo com a migration 202609070001 ────
+    channel: Mapped[OrderChannel] = mapped_column(
+        SAEnum(OrderChannel, name="order_channel"), nullable=False, default=OrderChannel.delivery
+    )
+    # Presencial (dine_in): garçom + mesa + comanda. Nulos em delivery.
+    waiter_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("staff.id"), nullable=True)
+    table_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("restaurant_table.id"), nullable=True)
+    tab_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("tab.id"), nullable=True)
+    # ────────────────────────────────────────────────────────────────────
 
     customer_name: Mapped[str] = mapped_column(String(120), nullable=False)
     customer_address: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -90,6 +103,15 @@ class Order(Base):
     cook: Mapped["Staff | None"] = relationship(foreign_keys=[cook_id])
     driver: Mapped["Staff | None"] = relationship(foreign_keys=[driver_id])
 
+    # ── Fase 3 ──────────────────────────────────────────────────────────
+    waiter: Mapped["Staff | None"] = relationship(foreign_keys=[waiter_id])
+    table: Mapped["RestaurantTable | None"] = relationship()
+    tab: Mapped["Tab | None"] = relationship(back_populates="orders")
+    rating: Mapped["OrderRating | None"] = relationship(
+        back_populates="order", cascade="all, delete-orphan", uselist=False
+    )
+    # ────────────────────────────────────────────────────────────────────
+
     def __repr__(self) -> str:
         return f"<Order id={self.id} status={self.status}>"
 
@@ -108,6 +130,10 @@ class OrderItem(Base):
     unit_price: Mapped[float] = mapped_column(Float, nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     notes: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # Fase 3 (D1): custo congelado deste item no momento da compra (unit_cost
+    # do product * quantity, travado aqui pra não mudar se o custo do
+    # cardápio for reajustado depois).
+    cost: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
 
     order: Mapped["Order"] = relationship(back_populates="items")
     toppings: Mapped[list["OrderItemTopping"]] = relationship(
@@ -116,9 +142,7 @@ class OrderItem(Base):
 
 
 class OrderItemTopping(Base):
-    """Snapshot de um adicional escolhido num item do pedido (nome/preço
-    congelados no momento da compra — não referencia product_topping por FK
-    de propósito, pra o pedido não mudar se o cardápio mudar depois)."""
+    """Snapshot de um adicional escolhido num item do pedido."""
 
     __tablename__ = "order_item_topping"
 

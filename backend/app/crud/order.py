@@ -9,6 +9,7 @@ from app.models.order import (
     OrderStatus,
 )
 from app.models.staff import Staff, StaffRole
+from app.models.waiter import OrderRating
 from app.schemas.order import DeliveryFailureInput, OrderInput
 
 
@@ -20,6 +21,7 @@ def _get_order(db: Session, order_id: str) -> Order:
             selectinload(Order.cook),
             selectinload(Order.driver),
             selectinload(Order.delivery_failure),
+            selectinload(Order.rating),
         )
         .where(Order.id == order_id)
     )
@@ -90,6 +92,7 @@ def list_orders(
             selectinload(Order.cook),
             selectinload(Order.driver),
             selectinload(Order.delivery_failure),
+            selectinload(Order.rating),
         )
         .where(Order.tenant_id == tenant_id)
         .order_by(Order.created_at.desc())
@@ -251,6 +254,30 @@ def mark_failed(
 
     order.status = OrderStatus.falha_entrega
 
+    db.commit()
+
+    return _get_order(db, order.id)
+
+
+def submit_rating(db: Session, order_id: str, stars: int) -> Order:
+    order = _get_order(db, order_id)
+
+    if order.status != OrderStatus.entregue:
+        raise ValueError(
+            "Somente pedidos entregues podem ser avaliados."
+        )
+
+    if order.rating is not None:
+        raise ValueError(
+            "Este pedido já foi avaliado."
+        )
+
+    rating = OrderRating(
+        order_id=order.id,
+        stars=stars,
+    )
+
+    db.add(rating)
     db.commit()
 
     return _get_order(db, order.id)

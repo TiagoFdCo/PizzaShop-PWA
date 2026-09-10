@@ -20,6 +20,10 @@ class Product(Base):
     image_url: Mapped[str] = mapped_column(String(500), nullable=False, default="")
     category: Mapped[str] = mapped_column(String(40), nullable=False)
     base_price: Mapped[float] = mapped_column(Float, nullable=False)
+    # Fase 3 (D1): custo do produto — necessário pra calcular lucro (venda -
+    # custo). Default 0.0 pra não quebrar produtos já cadastrados; alguém do
+    # time precisa preencher os valores reais depois da migration rodar.
+    cost: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     available_sizes: Mapped[list[str]] = mapped_column(ARRAY(String), nullable=False, default=list)
 
     toppings: Mapped[list["ProductTopping"]] = relationship(

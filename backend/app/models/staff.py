@@ -9,9 +9,10 @@ from app.db.base import Base
 
 
 class StaffRole(str, enum.Enum):
-    admin = "admin"
-    cozinha = "cozinha"
-    entrega = "entrega"
+     admin = "admin"
+     cozinha = "cozinha"
+     entrega = "entrega"
+     garcom = "garcom"
 
 
 class Staff(Base):
