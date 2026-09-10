@@ -49,10 +49,7 @@ export function TablesPage() {
       setOpeningTableId(table.id);
       setError(null);
 
-      await openTab({
-        tableId: table.id,
-        waiterId: session.staff.id,
-      });
+      const tab = await openTab(table.id);
 
       const updatedTable = await updateTableStatus(table.id, "ocupada");
 
@@ -64,7 +61,7 @@ export function TablesPage() {
         )
       );
 
-      navigate(`/garcom/comanda/${table.id}`);
+      navigate(`/garcom/comanda/${tab.id}`);
     } catch (err) {
       setError(
         err instanceof Error
