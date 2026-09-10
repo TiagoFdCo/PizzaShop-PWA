@@ -2,11 +2,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.crud.product import create_product, delete_product, get_product, list_products, update_product
+from app.crud.recommendation import get_popular_products
 from app.crud.tenant import get_tenant
 from app.db.session import get_db
 from app.deps import require_role
 from app.models.staff import StaffRole
 from app.schemas.product import ProductInput, ProductOut
+from app.schemas.recommendation import ProductRecommendationOut
 
 router = APIRouter(prefix="/products", tags=["products"])
 
@@ -30,6 +32,28 @@ def read_product(product_id: str, db: Session = Depends(get_db)) -> ProductOut:
     if product is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Produto não encontrado")
     return ProductOut.model_validate(product)
+
+
+@router.get("/{product_id}/recommendations", response_model=list[ProductRecommendationOut])
+def read_product_recommendations(
+    product_id: str,
+    db: Session = Depends(get_db),
+) -> list[ProductRecommendationOut]:
+    """
+    Recomendação pública (sem auth) — "quem viu esse produto também pediu".
+    Popularidade geral (soma de quantity em order_item), excluindo o
+    produto atual. Ver app/crud/recommendation.py para a regra completa,
+    incluindo o fallback para cardápios com pouco histórico.
+    """
+    tenant_id = _tenant_id(db)
+
+    product = get_product(db, product_id)
+    if product is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Produto não encontrado")
+
+    recommended = get_popular_products(db, tenant_id, exclude_product_id=product_id, limit=4)
+
+    return [ProductRecommendationOut.model_validate(p) for p in recommended]
 
 
 @router.post("", response_model=ProductOut, status_code=status.HTTP_201_CREATED)
