@@ -3,12 +3,23 @@ import type { Pizza, PizzaInput } from "../types/product";
 
 const ENDPOINT = "/products";
 
+export interface ProductRecommendation {
+  id: string;
+  name: string;
+  imageUrl: string;
+  basePrice: number;
+}
+
 export async function getProducts(): Promise<Pizza[]> {
   return apiFetch<Pizza[]>(ENDPOINT);
 }
 
 export async function getProductById(id: string): Promise<Pizza> {
   return apiFetch<Pizza>(`${ENDPOINT}/${id}`);
+}
+
+export async function getProductRecommendations(id: string): Promise<ProductRecommendation[]> {
+  return apiFetch<ProductRecommendation[]>(`${ENDPOINT}/${id}/recommendations`);
 }
 
 export async function createProduct(input: PizzaInput): Promise<Pizza> {

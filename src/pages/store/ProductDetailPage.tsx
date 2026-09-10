@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useFetch } from "../../hooks/useFetch";
-import { getProductById } from "../../services/productService";
+import { getProductById, getProductRecommendations } from "../../services/productService";
 import { useCartStore } from "../../store/useCartStore";
 import { formatCurrency } from "../../lib/formatCurrency";
 import type { Size } from "../../types/product";
@@ -12,6 +12,7 @@ export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: product, loading, error } = useFetch(() => getProductById(id!), [id]);
+  const { data: recommendations } = useFetch(() => getProductRecommendations(id!), [id]);
   const addItem = useCartStore((state) => state.addItem);
 
   const [size, setSize] = useState<Size | null>(null);
@@ -109,6 +110,25 @@ export function ProductDetailPage() {
         <p className="text-xl font-bold text-gray-900">{formatCurrency(total)}</p>
         <Button onClick={handleAddToCart}>Adicionar ao carrinho</Button>
       </div>
+
+      {recommendations && recommendations.length > 0 && (
+        <div className="mt-8">
+          <h2 className="font-semibold text-gray-800 mb-3">Costuma ser pedido junto</h2>
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {recommendations.map((rec) => (
+              <button
+                key={rec.id}
+                onClick={() => navigate(`/produto/${rec.id}`)}
+                className="flex-shrink-0 w-32 text-left"
+              >
+                <img src={rec.imageUrl} alt={rec.name} className="w-32 h-24 object-cover rounded-lg" />
+                <p className="mt-1 text-sm font-medium text-gray-800 truncate">{rec.name}</p>
+                <p className="text-xs text-gray-500">{formatCurrency(rec.basePrice)}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
