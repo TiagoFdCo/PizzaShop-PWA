@@ -10,8 +10,7 @@ from app.db.base import Base
 
 if TYPE_CHECKING:
     from app.models.staff import Staff
-    from app.models.table import RestaurantTable, Tab
-    from app.models.rating import OrderRating
+    from app.models.waiter import Tab, OrderRating
 
 
 class OrderStatus(str, enum.Enum):
@@ -35,12 +34,6 @@ ORDER_STATUS_FLOW: list[OrderStatus] = [
 ]
 
 
-class OrderChannel(str, enum.Enum):
-    """Fase 3: canal do pedido. delivery = fluxo antigo; dine_in = presencial."""
-    delivery = "delivery"
-    dine_in = "dine_in"
-
-
 class PaymentMethod(str, enum.Enum):
     pix = "pix"
     cartao = "cartao"
@@ -55,22 +48,39 @@ class DeliveryFailureReason(str, enum.Enum):
     outro = "outro"
 
 
+class OrderChannel(str, enum.Enum):
+    """D3 do plano: pedido delivery ou presencial (dine_in). Presencial não
+    tem taxa de entrega/entregador; tem mesa+comanda+garçom (via tab_id)."""
+
+    delivery = "delivery"
+    dine_in = "dine_in"
+
+
 class Order(Base):
     """
     Pedido. `cook_id`/`driver_id` são FKs de verdade pra staff (diferente do
     mock em db.json, que embutia {id, name} pra evitar fetch extra — aqui o
     JOIN resolve isso sem duplicar dado). Cliente não tem tabela própria:
     dados soltos em customer_* porque ele não autentica no sistema.
-
-    Fase 3: `channel` separa delivery de presencial. Num pedido dine_in,
-    delivery_fee=0 e customer_* recebe um rótulo de mesa (não há cliente
-    cadastrado); os vínculos waiter_id/table_id/tab_id apontam pro presencial.
     """
 
     __tablename__ = "order"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     tenant_id: Mapped[str] = mapped_column(String(36), ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False)
+
+    # ── Fase 3 (D1 + D3) ────────────────────────────────────────────────
+    channel: Mapped[OrderChannel] = mapped_column(
+        SAEnum(OrderChannel, name="order_channel"), nullable=False, default=OrderChannel.delivery
+    )
+    # Preenchido só quando channel == dine_in. Nulo em pedidos de delivery.
+    tab_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("tab.id"), nullable=True)
+    # Custo total congelado no momento da compra (D1) — soma do custo de
+    # cada item * quantidade, travado na criação do pedido. Não referencia
+    # product.cost por FK de propósito: reajuste de custo futuro no cardápio
+    # não pode mudar o lucro de pedidos já feitos.
+    frozen_cost: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    # ────────────────────────────────────────────────────────────────────
 
     customer_name: Mapped[str] = mapped_column(String(120), nullable=False)
     customer_address: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -84,15 +94,6 @@ class Order(Base):
     status: Mapped[OrderStatus] = mapped_column(
         SAEnum(OrderStatus, name="order_status"), nullable=False, default=OrderStatus.recebido
     )
-
-    # Fase 3 ---------------------------------------------------------------
-    channel: Mapped[OrderChannel] = mapped_column(
-        SAEnum(OrderChannel, name="order_channel"), nullable=False, default=OrderChannel.delivery
-    )
-    waiter_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("staff.id"), nullable=True)
-    table_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("restaurant_table.id"), nullable=True)
-    tab_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("tab.id"), nullable=True)
-    # ---------------------------------------------------------------------
 
     cook_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("staff.id"), nullable=True)
     driver_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("staff.id"), nullable=True)
@@ -111,12 +112,12 @@ class Order(Base):
     cook: Mapped["Staff | None"] = relationship(foreign_keys=[cook_id])
     driver: Mapped["Staff | None"] = relationship(foreign_keys=[driver_id])
 
-    # Fase 3
-    waiter: Mapped["Staff | None"] = relationship(foreign_keys=[waiter_id])
+    # ── Fase 3 ──────────────────────────────────────────────────────────
     tab: Mapped["Tab | None"] = relationship(back_populates="orders")
     rating: Mapped["OrderRating | None"] = relationship(
         back_populates="order", cascade="all, delete-orphan", uselist=False
     )
+    # ────────────────────────────────────────────────────────────────────
 
     def __repr__(self) -> str:
         return f"<Order id={self.id} status={self.status}>"
@@ -134,8 +135,6 @@ class OrderItem(Base):
     image_url: Mapped[str] = mapped_column(String(500), nullable=False, default="")
     size: Mapped[str] = mapped_column(String(1), nullable=False)  # "P" | "M" | "G"
     unit_price: Mapped[float] = mapped_column(Float, nullable=False)
-    # Fase 3: custo unitário CONGELADO no momento da compra (snapshot — D1).
-    cost: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     notes: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
