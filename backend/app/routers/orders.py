@@ -10,6 +10,7 @@ from app.crud.order import (
     mark_delivered,
     mark_failed,
     mark_ready,
+    submit_rating,
 )
 from app.crud.tenant import get_tenant
 from app.db.session import get_db
@@ -21,6 +22,7 @@ from app.schemas.order import (
     DispatchInput,
     OrderInput,
     OrderOut,
+    OrderRatingInput,
 )
 from app.schemas.common import CamelModel
 
@@ -30,14 +32,9 @@ router = APIRouter(
 )
 
 
-# ─── Schema local ─────────────────────────────────────────────────────────────
-
 class StatusUpdateInput(CamelModel):
-    """Payload de PATCH /orders/{id}/status — override administrativo."""
     status: OrderStatus
 
-
-# ─── Helpers ──────────────────────────────────────────────────────────────────
 
 def _tenant_id(db: Session) -> str:
     tenant = get_tenant(db)
@@ -112,6 +109,7 @@ def _order_to_out(order: Order) -> OrderOut:
                 if order.delivery_failure
                 else None
             ),
+            "rating": order.rating.stars if order.rating else None,
         }
     )
 
@@ -138,7 +136,6 @@ def _handle_order_error(error: ValueError) -> HTTPException:
 
 
 def _load_order_with_relations(db: Session, order_id: str) -> Order:
-    """Carrega pedido com todos os relacionamentos necessários para _order_to_out."""
     from sqlalchemy import select
 
     stmt = (
@@ -148,6 +145,7 @@ def _load_order_with_relations(db: Session, order_id: str) -> Order:
             selectinload(Order.cook),
             selectinload(Order.driver),
             selectinload(Order.delivery_failure),
+            selectinload(Order.rating),
         )
         .where(Order.id == order_id)
     )
@@ -156,8 +154,6 @@ def _load_order_with_relations(db: Session, order_id: str) -> Order:
         raise ValueError("Pedido não encontrado.")
     return order
 
-
-# ─── Endpoints ────────────────────────────────────────────────────────────────
 
 @router.post(
     "",
@@ -215,12 +211,6 @@ def track_order(
     order_id: str,
     db: Session = Depends(get_db),
 ) -> OrderOut:
-    """
-    Endpoint público para o cliente acompanhar o próprio pedido pelo ID.
-
-    Não exige JWT — o ID do pedido (UUID) é gerado pelo banco e só o cliente
-    que criou o pedido tem acesso a ele (recebeu no fluxo de checkout).
-    """
     try:
         order = _load_order_with_relations(db, order_id)
     except ValueError as error:
@@ -228,6 +218,28 @@ def track_order(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(error),
         ) from error
+
+    return _order_to_out(order)
+
+
+@router.post(
+    "/{order_id}/rating",
+    response_model=OrderOut,
+    summary="Avaliação do pedido — sem autenticação",
+)
+def rate_order(
+    order_id: str,
+    data: OrderRatingInput,
+    db: Session = Depends(get_db),
+) -> OrderOut:
+    """
+    Endpoint público — mesma lógica de acesso do /track: o UUID do pedido
+    já funciona como "senha" (só quem recebeu o link no checkout tem o ID).
+    """
+    try:
+        order = submit_rating(db, order_id, data.stars)
+    except ValueError as error:
+        raise _handle_order_error(error) from error
 
     return _order_to_out(order)
 
@@ -268,10 +280,6 @@ def update_status_admin(
     db: Session = Depends(get_db),
     _admin: Staff = Depends(require_role([StaffRole.admin])),
 ) -> OrderOut:
-    """
-    Admin pode forçar qualquer transição de status sem as restrições de role.
-    Útil para corrigir pedidos travados ou para demos/testes.
-    """
     try:
         order = _load_order_with_relations(db, order_id)
     except ValueError as error:
@@ -280,7 +288,6 @@ def update_status_admin(
     order.status = data.status
     db.commit()
 
-    # Recarrega para refletir qualquer cascade
     order = _load_order_with_relations(db, order_id)
     return _order_to_out(order)
 
