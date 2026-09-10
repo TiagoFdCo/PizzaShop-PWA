@@ -107,5 +107,38 @@
     }
   ],
   "orders": [],
-  "drivers": []
+  "drivers": [],
+  "tables": [
+    {
+      "id": "1",
+      "number": 1,
+      "status": "livre"
+    },
+    {
+      "id": "2",
+      "number": 2,
+      "status": "livre"
+    },
+    {
+      "id": "3",
+      "number": 3,
+      "status": "ocupada"
+    },
+    {
+      "id": "4",
+      "number": 4,
+      "status": "livre"
+    },
+    {
+      "id": "5",
+      "number": 5,
+      "status": "livre"
+    },
+    {
+      "id": "6",
+      "number": 6,
+      "status": "ocupada"
+    }
+  ],
+  "tabs": []
 }
