@@ -256,6 +256,50 @@ clique manual em outra tela. Testado o fluxo completo (abrir mesa → abrir
 comanda → lançar item → fechar → pagar) confirmando que o pedido vira
 `entregue` e passa a contar no financeiro.
 
+## 10. Avaliação da entrega visível pro entregador + painel do entregador com o mesmo visual dos outros
+
+Pedido do Tiago: mostrar a avaliação (estrelinha) da entrega pro próprio
+entregador, e deixar o painel dele com a mesma cara do admin/cozinha/garçom.
+
+- **Avaliação**: o backend já suportava isso (`GET /orders` devolve `rating`
+  e já filtra só os pedidos do entregador logado) — faltava só o frontend.
+  Nova função `getDeliveredOrdersForDriver` (`orderService.ts`) busca as
+  entregas concluídas do entregador. `DriverOrdersPage.tsx` ganhou uma aba
+  **"Entregues"** ao lado de "Em rota", mostrando cada entrega com a nota em
+  estrelas que o cliente deu (ou "Cliente ainda não avaliou", se ainda não
+  avaliou) e a nota média no topo.
+- **Cor do painel**: `DriverLayout.tsx`, `DriverLoginPage.tsx`,
+  `DriverOrderCard.tsx` e `DeliveryOutcomeModal.tsx` usavam um tema escuro
+  próprio (`zinc`/`orange`), diferente de todo o resto do sistema
+  (`gray-50`/branco/`primary`, usado por Admin, Cozinha e Garçom). Os
+  quatro arquivos foram reescritos pra usar a mesma paleta — mesma
+  estrutura visual, só trocando as cores/tokens Tailwind.
+
+## 11. "Failed to fetch dynamically imported module" depois de um build
+
+Depois de reconstruir o frontend (qualquer `docker compose up --build`), uma
+aba do navegador que já estava aberta antes do rebuild pode tentar buscar um
+chunk JS com o hash do build **anterior** — que não existe mais no servidor,
+já que cada build gera hashes novos. É o React Router lazy-loading tentando
+buscar `MenuPage-<hash-antigo>.js` e recebendo 404. Isso é agravado pelo
+service worker do PWA (`vite-plugin-pwa`, modo `generateSW`): sem
+`skipWaiting`/`clientsClaim`, o SW novo fica "esperando" todas as abas
+fecharem antes de assumir, então a aba antiga continua sendo servida pelo
+cache do SW anterior indefinidamente.
+
+Corrigido nas duas frentes:
+- `vite.config.ts` — `workbox: { skipWaiting: true, clientsClaim: true }`,
+  pra o SW novo assumir imediatamente em vez de esperar todas as abas
+  fecharem.
+- Novo `RouteErrorBoundary.tsx`, ligado como `errorElement` na rota raiz
+  (`router.tsx`): detecta especificamente o erro de chunk (`Failed to fetch
+  dynamically imported module` e variantes) e recarrega a página sozinho,
+  uma vez (controlado por `sessionStorage`, resetado pelo `RootLayout` assim
+  que o app carrega com sucesso — assim uma futura falha real de chunk
+  ainda consegue disparar um novo reload automático). Outros erros de rota
+  caem numa tela genérica com botão "Voltar ao início" em vez da tela padrão
+  do React Router.
+
 ## 3. O que ainda falta (não corrigido neste pacote)
 
 - **Teste de ponta a ponta do fluxo presencial.** `backend/tests/` cobre

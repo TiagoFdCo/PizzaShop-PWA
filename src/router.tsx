@@ -1,6 +1,7 @@
 ﻿import { Suspense, lazy } from "react";
 import { RouterProvider, createBrowserRouter, Navigate } from "react-router-dom";
 import { RootLayout } from "./components/layout/RootLayout";
+import { RouteErrorBoundary } from "./components/RouteErrorBoundary";
 import { StoreLayout } from "./components/layout/StoreLayout";
 import { AdminLayout } from "./components/layout/AdminLayout";
 import { KitchenLayout } from "./components/layout/KitchenLayout";
@@ -49,6 +50,7 @@ function Fallback() {
 export const router = createBrowserRouter([
   {
     element: <RootLayout />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       {
         element: <StoreLayout />,

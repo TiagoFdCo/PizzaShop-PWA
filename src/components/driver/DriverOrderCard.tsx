@@ -44,44 +44,44 @@ export function DriverOrderCard({ order, onDelivered, onFailed }: DriverOrderCar
 
   return (
     <>
-      <article className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+      <article className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         {/* Top bar */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800/60">
+        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono text-zinc-500">#{order.id}</span>
-            <span className="h-3 w-px bg-zinc-700" />
-            <span className="text-xs bg-orange-500/15 text-orange-400 border border-orange-500/25 px-2 py-0.5 rounded-full font-medium">
+            <span className="font-mono text-xs text-gray-400">#{order.id}</span>
+            <span className="h-3 w-px bg-gray-200" />
+            <span className="rounded-full border border-primary/25 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
               Em rota
             </span>
           </div>
-          <div className="flex items-center gap-1 text-zinc-500 text-xs">
+          <div className="flex items-center gap-1 text-xs text-gray-400">
             <Clock size={12} />
             <span>{formatTime(order.createdAt)}</span>
           </div>
         </div>
 
         {/* Client info */}
-        <div className="px-4 pt-4 pb-3">
-          <p className="font-semibold text-zinc-100 text-base">{order.customer.name}</p>
+        <div className="px-4 pb-3 pt-4">
+          <p className="text-base font-semibold text-gray-900">{order.customer.name}</p>
 
           <a
             href={`https://maps.google.com/?q=${encodeURIComponent(order.customer.address)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-start gap-2 mt-2 group"
+            className="group mt-2 flex items-start gap-2"
           >
-            <MapPin size={14} className="text-zinc-500 mt-0.5 shrink-0 group-hover:text-orange-400 transition-colors" />
-            <span className="text-sm text-zinc-400 group-hover:text-orange-400 transition-colors leading-snug">
+            <MapPin size={14} className="mt-0.5 shrink-0 text-gray-400 transition-colors group-hover:text-primary" />
+            <span className="text-sm leading-snug text-gray-600 transition-colors group-hover:text-primary">
               {order.customer.address}
             </span>
           </a>
 
           <a
             href={`tel:${order.customer.phone}`}
-            className="flex items-center gap-2 mt-1.5 group"
+            className="group mt-1.5 flex items-center gap-2"
           >
-            <Phone size={13} className="text-zinc-500 group-hover:text-orange-400 transition-colors" />
-            <span className="text-sm text-zinc-400 group-hover:text-orange-400 transition-colors">
+            <Phone size={13} className="text-gray-400 transition-colors group-hover:text-primary" />
+            <span className="text-sm text-gray-600 transition-colors group-hover:text-primary">
               {order.customer.phone}
             </span>
           </a>
@@ -90,41 +90,40 @@ export function DriverOrderCard({ order, onDelivered, onFailed }: DriverOrderCar
         {/* Items toggle */}
         <button
           onClick={() => setShowItems((v) => !v)}
-          className="w-full flex items-center justify-between px-4 py-2.5 text-left border-t border-zinc-800/60 hover:bg-zinc-800/40 transition-colors"
+          className="flex w-full items-center justify-between border-t border-gray-100 px-4 py-2.5 text-left transition-colors hover:bg-gray-50"
         >
-          <span className="text-xs text-zinc-500">
+          <span className="text-xs text-gray-400">
             {order.items.length} {order.items.length === 1 ? "item" : "itens"} ·{" "}
             {paymentLabel[order.paymentMethod]}
           </span>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-zinc-200">
+            <span className="text-sm font-semibold text-gray-800">
               {formatCurrency(order.total)}
             </span>
             {showItems ? (
-              <ChevronUp size={14} className="text-zinc-500" />
+              <ChevronUp size={14} className="text-gray-400" />
             ) : (
-              <ChevronDown size={14} className="text-zinc-500" />
+              <ChevronDown size={14} className="text-gray-400" />
             )}
           </div>
         </button>
 
         {showItems && (
-          <ul className="px-4 pb-3 border-t border-zinc-800/40 pt-2.5 flex flex-col gap-1.5">
+          <ul className="flex flex-col gap-1.5 border-t border-gray-100 px-4 pb-3 pt-2.5">
             {order.items.map((item) => (
-              
               <li key={item.id} className="flex justify-between text-sm">
-                <span className="text-zinc-400">
+                <span className="text-gray-600">
                   {item.quantity}× {item.name}{" "}
-                  <span className="text-zinc-600 text-xs">
+                  <span className="text-xs text-gray-400">
                     ({SIZE_LABEL[item.size] ?? item.size})
                   </span>
                 </span>
-                <span className="text-zinc-500 text-xs">
+                <span className="text-xs text-gray-400">
                   {formatCurrency(item.unitPrice * item.quantity)}
                 </span>
               </li>
             ))}
-            <li className="flex justify-between text-xs text-zinc-600 pt-1 border-t border-zinc-800 mt-1">
+            <li className="mt-1 flex justify-between border-t border-gray-100 pt-1 text-xs text-gray-400">
               <span>Taxa de entrega</span>
               <span>{formatCurrency(order.deliveryFee)}</span>
             </li>
@@ -132,11 +131,11 @@ export function DriverOrderCard({ order, onDelivered, onFailed }: DriverOrderCar
         )}
 
         {/* Actions */}
-        <div className="px-4 pb-4 pt-3 flex flex-col gap-2.5 border-t border-zinc-800/60">
+        <div className="flex flex-col gap-2.5 border-t border-gray-100 px-4 pb-4 pt-3">
           <button
             onClick={handleDelivered}
             disabled={loadingDelivered}
-            className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-600/40 disabled:cursor-not-allowed text-white font-semibold text-sm py-3.5 rounded-xl transition-colors"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-600 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-green-600/40"
           >
             <CheckCircle2 size={16} />
             {loadingDelivered ? "Confirmando..." : "Marcar como entregue"}
@@ -145,7 +144,7 @@ export function DriverOrderCard({ order, onDelivered, onFailed }: DriverOrderCar
           <button
             onClick={() => setShowModal(true)}
             disabled={loadingDelivered}
-            className="w-full flex items-center justify-center gap-2 border border-zinc-700 hover:border-red-500/50 hover:bg-red-500/5 text-zinc-400 hover:text-red-400 font-medium text-sm py-3 rounded-xl transition-all"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-sm font-medium text-gray-500 transition-all hover:border-red-300 hover:bg-red-50 hover:text-red-600"
           >
             <XCircle size={15} />
             Não consegui entregar

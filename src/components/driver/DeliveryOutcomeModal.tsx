@@ -45,45 +45,45 @@ export function DeliveryOutcomeModal({
   return (
     // Backdrop
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 px-4 pb-4 sm:pb-0"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-4 sm:items-center sm:pb-0"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       {/* Sheet */}
-      <div className="w-full max-w-md bg-zinc-900 rounded-2xl border border-zinc-800 overflow-hidden">
+      <div className="w-full max-w-md overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
         {/* Header */}
-        <div className="flex items-start justify-between px-5 pt-5 pb-4 border-b border-zinc-800">
+        <div className="flex items-start justify-between border-b border-gray-100 px-5 pb-4 pt-5">
           <div className="flex items-center gap-3">
-            <div className="bg-red-500/10 rounded-lg p-2">
-              <AlertTriangle size={18} className="text-red-400" />
+            <div className="rounded-lg bg-red-50 p-2">
+              <AlertTriangle size={18} className="text-red-500" />
             </div>
             <div>
-              <p className="font-semibold text-zinc-100 text-sm">Falha na entrega</p>
-              <p className="text-xs text-zinc-500 mt-0.5">Pedido de {customerName}</p>
+              <p className="text-sm font-semibold text-gray-900">Falha na entrega</p>
+              <p className="mt-0.5 text-xs text-gray-400">Pedido de {customerName}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-zinc-500 hover:text-zinc-300 transition-colors p-1"
+            className="p-1 text-gray-400 transition-colors hover:text-gray-600"
           >
             <X size={18} />
           </button>
         </div>
 
         {/* Body */}
-        <div className="px-5 py-4 flex flex-col gap-4">
+        <div className="flex flex-col gap-4 px-5 py-4">
           {/* Motivo */}
           <fieldset>
-            <legend className="text-xs font-medium text-zinc-400 mb-2.5">
+            <legend className="mb-2.5 text-xs font-medium text-gray-500">
               Motivo da falha
             </legend>
             <div className="flex flex-col gap-2">
               {reasons.map(([value, label]) => (
                 <label
                   key={value}
-                  className={`flex items-center gap-3 px-3.5 py-3 rounded-xl border cursor-pointer transition-all ${
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-3 transition-all ${
                     reason === value
-                      ? "border-orange-500/60 bg-orange-500/10 text-zinc-100"
-                      : "border-zinc-800 bg-zinc-800/50 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300"
+                      ? "border-primary/50 bg-primary/5 text-gray-900"
+                      : "border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300 hover:text-gray-700"
                   }`}
                 >
                   <input
@@ -92,7 +92,7 @@ export function DeliveryOutcomeModal({
                     value={value}
                     checked={reason === value}
                     onChange={() => setReason(value)}
-                    className="accent-orange-500 w-4 h-4 shrink-0"
+                    className="h-4 w-4 shrink-0 accent-primary"
                   />
                   <span className="text-sm">{label}</span>
                 </label>
@@ -104,10 +104,10 @@ export function DeliveryOutcomeModal({
           <div>
             <label
               htmlFor="description"
-              className="text-xs font-medium text-zinc-400 block mb-2"
+              className="mb-2 block text-xs font-medium text-gray-500"
             >
               Observações{" "}
-              <span className="text-zinc-600 font-normal">(opcional)</span>
+              <span className="font-normal text-gray-400">(opcional)</span>
             </label>
             <textarea
               id="description"
@@ -115,24 +115,24 @@ export function DeliveryOutcomeModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Detalhes adicionais sobre a ocorrência..."
-              className="w-full bg-zinc-800/60 border border-zinc-700 rounded-xl px-3.5 py-3 text-sm text-zinc-200 placeholder-zinc-600 resize-none focus:outline-none focus:border-orange-500/60 focus:ring-1 focus:ring-orange-500/20 transition-colors"
+              className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-3 text-sm text-gray-800 placeholder-gray-400 transition-colors focus:border-primary/60 focus:outline-none focus:ring-1 focus:ring-primary/20"
             />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-5 pb-5 flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2.5 px-5 pb-5">
           <button
             onClick={handleConfirm}
             disabled={loading}
-            className="w-full bg-red-600 hover:bg-red-500 disabled:bg-red-600/40 disabled:cursor-not-allowed text-white font-semibold text-sm py-3.5 rounded-xl transition-colors"
+            className="w-full rounded-xl bg-red-600 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-600/40"
           >
             {loading ? "Registrando..." : "Confirmar falha"}
           </button>
           <button
             onClick={onClose}
             disabled={loading}
-            className="w-full text-zinc-500 hover:text-zinc-300 font-medium text-sm py-2.5 rounded-xl transition-colors hover:bg-zinc-800"
+            className="w-full rounded-xl py-2.5 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
           >
             Cancelar
           </button>

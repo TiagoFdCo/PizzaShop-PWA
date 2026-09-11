@@ -12,18 +12,18 @@ export function DriverLayout({ children }: DriverLayoutProps) {
   const driverName = session?.staff.name ?? session?.staff.username ?? "Entregador";
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col">
-      {/* Header */}
-      <header className="bg-zinc-900 border-b border-zinc-800 px-4 py-3 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center gap-2">
-          <div className="bg-orange-500 rounded-lg p-1.5">
-            <Bike size={18} className="text-white" />
+    <div className="flex min-h-screen flex-col bg-gray-50 text-gray-900">
+      {/* Header — mesma paleta (branco + primary) do Admin/Cozinha/Garçom */}
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3">
+        <div className="flex items-center gap-3">
+          <div className="rounded-lg bg-primary/10 p-2 text-primary">
+            <Bike size={20} />
           </div>
           <div className="leading-tight">
-            <p className="text-[11px] text-zinc-500 uppercase tracking-widest font-medium">
+            <p className="text-[11px] font-medium uppercase tracking-widest text-gray-400">
               Entregador
             </p>
-            <p className="text-sm font-semibold text-zinc-100 leading-none">
+            <p className="text-sm font-semibold leading-none text-gray-900">
               {driverName}
             </p>
           </div>
@@ -31,7 +31,7 @@ export function DriverLayout({ children }: DriverLayoutProps) {
 
         <button
           onClick={logout}
-          className="flex items-center gap-1.5 text-zinc-500 hover:text-zinc-300 transition-colors text-sm py-1 px-2 rounded-md hover:bg-zinc-800"
+          className="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
         >
           <LogOut size={15} />
           <span className="hidden sm:inline">Sair</span>
@@ -39,7 +39,7 @@ export function DriverLayout({ children }: DriverLayoutProps) {
       </header>
 
       {/* Content */}
-      <main className="flex-1 w-full max-w-lg mx-auto px-4 py-6">
+      <main className="mx-auto w-full max-w-lg flex-1 px-4 py-6">
         {children}
       </main>
     </div>

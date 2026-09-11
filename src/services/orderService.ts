@@ -64,6 +64,14 @@ export async function getOrdersForDriver(driverId: string): Promise<Order[]> {
   );
 }
 
+/** Entregas já concluídas por este entregador, com a nota que o cliente deu (se já avaliou). */
+export async function getDeliveredOrdersForDriver(driverId: string): Promise<Order[]> {
+  const all = await getOrders();
+  return all
+    .filter((o) => o.driver?.id === driverId && o.status === "entregue")
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
 export async function markOrderDelivered(orderId: string): Promise<Order> {
   return apiFetch<Order>(`${ENDPOINT}/${orderId}/delivered`, { method: "PATCH" });
 }

@@ -25,6 +25,15 @@ export default defineConfig({
       // Em dev o SW NÃO é registrado (devOptions.enabled fica false por padrão),
       // então o service worker só entra no `build`/`preview`.
       workbox: {
+        // Corrigido: sem isso, o service worker novo (de cada build) fica
+        // "esperando" até TODAS as abas do app fecharem antes de assumir —
+        // uma aba já aberta continua servida pelo SW antigo, que aponta pra
+        // chunks JS com hash antigo que não existem mais no servidor
+        // ("Failed to fetch dynamically imported module" depois de um
+        // deploy). skipWaiting + clientsClaim fazem o SW novo assumir
+        // imediatamente.
+        skipWaiting: true,
+        clientsClaim: true,
         // Só faz cache de imagens da MESMA origem. A API fica em outra origem
         // (:8000) e é deixada passar direto — assim o SW nunca intercepta nem
         // reenvia as chamadas de /products, /tenant etc., o que evita a
