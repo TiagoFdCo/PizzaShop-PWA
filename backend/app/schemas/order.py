@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import Field
 
-from app.models.order import DeliveryFailureReason, OrderStatus, PaymentMethod
+from app.models.order import DeliveryFailureReason, OrderChannel, OrderStatus, PaymentMethod
 from app.schemas.common import CamelModel
 from app.schemas.staff import StaffRef
 
@@ -90,6 +90,8 @@ class OrderOut(CamelModel):
     delivery_fee: float
     total: float
     status: OrderStatus
+    channel: OrderChannel = OrderChannel.delivery  # Fase 3: delivery | dine_in
+    tab_id: str | None = None                      # Fase 3: comanda, se presencial
     created_at: datetime
 
     cook: StaffRef | None = None

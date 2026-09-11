@@ -19,6 +19,7 @@ from app.models.waiter import (  # noqa: F401
     TabStatus,
     OrderRating,
 )
+from app.models.expense import Expense, ExpenseCategory  # noqa: F401
 
 __all__ = [
     "Tenant",
@@ -40,4 +41,6 @@ __all__ = [
     "TableStatus",
     "TabStatus",
     "OrderRating",
+    "Expense",
+    "ExpenseCategory",
 ]

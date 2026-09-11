@@ -8,19 +8,24 @@ para os TODOs que ficam com **P2** (domínio de pedidos).
 
 ## Rodando com Docker (recomendado — ninguém precisa instalar Postgres local)
 
+O `docker-compose.yml` fica na **raiz do repositório** (não dentro de
+`backend/`), porque também sobe o frontend:
+
 ```bash
-cd backend
-docker-compose up --build
+docker-compose up --build --detach
+docker-compose exec backend alembic upgrade head
 ```
 
-Isso sobe Postgres + a API, já rodando as migrations (`alembic upgrade head`)
-antes de iniciar o Uvicorn. A API fica em `http://localhost:8000`, com
-Swagger interativo em `http://localhost:8000/docs`.
+Isso sobe Postgres + a API em `http://localhost:8000`, com Swagger
+interativo em `http://localhost:8000/docs`. As migrations **não** rodam
+sozinhas — é preciso o `alembic upgrade head` acima (serviço chama-se
+`backend`, não `api`).
 
-Depois, popule o banco com o cardápio e tenant que já existem no `db.json`:
+Depois, popule o banco com o cardápio/tenant do `db.json`, os usuários
+padrão e as mesas de demonstração:
 
 ```bash
-docker-compose exec api python -m scripts.seed
+docker-compose exec backend python -m scripts.seed
 ```
 
 Isso cria também um usuário admin padrão: `admin` / `admin123` (troque depois).
@@ -60,16 +65,29 @@ backend/app/
 
 - `POST /auth/login` — devolve JWT com `role` embutido
 - `GET/PUT /tenant`
-- `GET/POST/PUT/DELETE /products`
-- `GET/POST /staff` (admin cadastra cozinheiros/entregadores; `GET
-  /staff?role=entrega` é o que a cozinha usa pro seletor de entregador)
+- `GET/POST/PUT/DELETE /products`, `GET /products/{id}/recommendations`
+- `GET/POST /staff` (admin cadastra entregadores pela UI; cozinheiro/garçom
+  só via seed ou API direta — ver "O que falta" abaixo)
+- `POST /orders`, ciclo completo `claim/ready/dispatch/delivered/failed`,
+  `POST /orders/{id}/rating`
+- `GET/POST /tables`, `PATCH /tables/{id}/status`
+- `POST /tabs`, `GET /tabs`, `POST /tabs/{id}/orders`, `PATCH /tabs/{id}/close`,
+  `PATCH /tabs/{id}/pay`
+- `GET /reports/summary`, `GET /reports/ledger`, `GET /reports/export.xlsx`,
+  `GET /reports/export.pdf`
+- `GET/POST /expenses`, `DELETE /expenses/{id}` — despesas administrativas do
+  Financeiro (aluguel, energia, ingredientes, etc.), persistidas por tenant
 - `GET /health`
 
-## O que falta (P2)
+## O que falta
 
-`app/routers/orders.py` e `app/crud/order.py` estão com TODOs detalhados —
-é a lógica de `claim/ready/dispatch/delivered/failed` do pedido. Os models e
-schemas de `Order` já estão prontos; só falta a camada de rota/crud por cima.
+- Tela de admin para cadastrar **garçom** e **cozinheiro** — hoje só dá pra
+  criar entregador pela UI (`DriversManagementPage`); os outros papéis
+  precisam de seed ou `POST /staff` direto na API.
+- Teste de integração cobrindo o fluxo presencial completo (abrir mesa →
+  lançar comanda → fechar → pagar) — hoje só há testes do fluxo delivery.
+- Recomendação hoje é "mais vendidos" (popularidade geral), não "costuma
+  ser pedido junto" (afinidade entre produtos) — ver `crud/recommendation.py`.
 
 ## Notas importantes pra quem for mexer aqui
 

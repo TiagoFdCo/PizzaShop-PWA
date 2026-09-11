@@ -20,6 +20,11 @@ export async function markOrderReady(id: string): Promise<Order> {
   return apiFetch<Order>(`${ORDERS_ENDPOINT}/${id}/ready`, { method: "PATCH" });
 }
 
+/** Pedido presencial (mesa) pronto -> servido. Sem entregador. */
+export async function markOrderServed(id: string): Promise<Order> {
+  return apiFetch<Order>(`${ORDERS_ENDPOINT}/${id}/serve`, { method: "PATCH" });
+}
+
 export async function dispatchOrder(id: string, driver: Staff): Promise<Order> {
   return apiFetch<Order>(`${ORDERS_ENDPOINT}/${id}/dispatch`, {
     method: "PATCH",

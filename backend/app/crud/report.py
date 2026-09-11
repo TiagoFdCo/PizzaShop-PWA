@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import TYPE_CHECKING
-
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.order import Order, OrderItem, OrderStatus
 from app.models.staff import Staff, StaffRole
+from app.models.waiter import OrderRating
 from app.schemas.report import (
     ChannelSummary,
     FinancialSummary,
@@ -15,10 +13,7 @@ from app.schemas.report import (
     StaffBreakdown,
 )
 
-if TYPE_CHECKING:
-    pass
-
-# ─── Mock data (flag useMock) ─────────────────────────────────────────────────
+# ─── Mock data (usado quando REPORTS_USE_MOCK=true ou como fallback) ─────────
 
 _MOCK_SUMMARY = FinancialSummary(
     total_revenue=18_450.0,
@@ -60,70 +55,87 @@ _MOCK_LEDGER: list[OrderLedgerRow] = [
 
 
 # ─── Real DB queries ───────────────────────────────────────────────────────────
+#
+# NOTA (corrigido): a versão anterior somava `Order.cost_snapshot` e tirava
+# média de `Order.rating` — nenhum dos dois é uma coluna real. O custo é
+# CONGELADO por item (`OrderItem.cost`, ver D1), não por pedido; a nota é um
+# relacionamento 1:1 com `order_rating.stars` (ver `OrderRating`), não um
+# número na própria linha do pedido. Isso fazia a consulta real estourar
+# exceção e cair sempre no mock — o financeiro nunca refletia dados reais.
+
+def _order_cost_subquery():
+    """Custo total por pedido = soma de (OrderItem.cost * quantity)."""
+    return (
+        select(
+            OrderItem.order_id.label("order_id"),
+            func.coalesce(func.sum(OrderItem.cost * OrderItem.quantity), 0).label("cost"),
+        )
+        .group_by(OrderItem.order_id)
+        .subquery()
+    )
+
 
 def get_financial_summary(db: Session) -> FinancialSummary:
-    """
-    Agrega faturamento, custo e lucro a partir do banco.
+    """Agrega faturamento, custo e lucro a partir do banco (dados reais)."""
+    cost_sq = _order_cost_subquery()
 
-    Campos de custo/canal/rating dependem das colunas adicionadas pelo P1 (D1/D3).
-    Enquanto não existirem, a query retorna 0 / None de forma segura.
-    """
-    # Totais gerais
+    # Totais gerais + nota média (join com order_rating, não com Order.rating)
     row = db.execute(
         select(
             func.count(Order.id).label("orders_count"),
             func.coalesce(func.sum(Order.total), 0).label("total_revenue"),
-            # cost_snapshot pode não existir ainda — coalesce garante 0
-            func.coalesce(func.sum(getattr(Order, "cost_snapshot", Order.total * 0)), 0).label("total_cost"),
-            func.avg(getattr(Order, "rating", None)).label("avg_rating"),
+            func.coalesce(func.sum(cost_sq.c.cost), 0).label("total_cost"),
+            func.avg(OrderRating.stars).label("avg_rating"),
         )
+        .outerjoin(cost_sq, cost_sq.c.order_id == Order.id)
+        .outerjoin(OrderRating, OrderRating.order_id == Order.id)
     ).one()
 
     total_revenue = float(row.total_revenue)
-    total_cost    = float(row.total_cost)
+    total_cost = float(row.total_cost)
 
-    # Breakdown por canal (campo `channel` adicionado pelo P1/D3)
-    try:
-        channel_rows = db.execute(
-            select(
-                Order.channel,  # type: ignore[attr-defined]
-                func.coalesce(func.sum(Order.total), 0).label("revenue"),
-                func.coalesce(func.sum(Order.cost_snapshot), 0).label("cost"),  # type: ignore[attr-defined]
-            ).group_by(Order.channel)  # type: ignore[attr-defined]
-        ).all()
-        channel_breakdown = [
-            ChannelSummary(
-                channel=r.channel,
-                revenue=float(r.revenue),
-                cost=float(r.cost),
-                profit=float(r.revenue) - float(r.cost),
-            )
-            for r in channel_rows
-        ]
-    except Exception:
-        channel_breakdown = []
+    # Breakdown por canal (delivery / dine_in)
+    channel_rows = db.execute(
+        select(
+            Order.channel,
+            func.coalesce(func.sum(Order.total), 0).label("revenue"),
+            func.coalesce(func.sum(cost_sq.c.cost), 0).label("cost"),
+        )
+        .outerjoin(cost_sq, cost_sq.c.order_id == Order.id)
+        .group_by(Order.channel)
+    ).all()
+    channel_breakdown = [
+        ChannelSummary(
+            channel=r.channel.value if hasattr(r.channel, "value") else r.channel,
+            revenue=float(r.revenue),
+            cost=float(r.cost),
+            profit=float(r.revenue) - float(r.cost),
+        )
+        for r in channel_rows
+    ]
 
-    # Breakdown por entregador/garçom
-    try:
+    # Breakdown por staff que gerou faturamento: entregador (driver_id) no
+    # delivery e garçom (waiter_id) no presencial — o roteiro pede os dois.
+    staff_breakdown: list[StaffBreakdown] = []
+    for staff_fk, role in ((Order.driver_id, StaffRole.entrega), (Order.waiter_id, StaffRole.garcom)):
         staff_rows = db.execute(
             select(
                 Staff.id, Staff.name, Staff.role,
                 func.count(Order.id).label("orders_count"),
                 func.coalesce(func.sum(Order.total), 0).label("revenue"),
             )
-            .join(Order, (Order.driver_id == Staff.id))
-            .where(Staff.role.in_([StaffRole.entrega]))
+            .join(Order, staff_fk == Staff.id)
+            .where(Staff.role == role)
             .group_by(Staff.id, Staff.name, Staff.role)
         ).all()
-        staff_breakdown = [
+        staff_breakdown += [
             StaffBreakdown(
-                staff_id=r.id, name=r.name, role=r.role,
+                staff_id=r.id, name=r.name,
+                role=r.role.value if hasattr(r.role, "value") else r.role,
                 orders_count=r.orders_count, revenue=float(r.revenue),
             )
             for r in staff_rows
         ]
-    except Exception:
-        staff_breakdown = []
 
     return FinancialSummary(
         total_revenue=total_revenue,
@@ -137,21 +149,25 @@ def get_financial_summary(db: Session) -> FinancialSummary:
 
 
 def get_order_ledger(db: Session) -> list[OrderLedgerRow]:
-    """Retorna lista linha a linha de pedidos para a aba 'Lista de Pedidos'."""
-    orders = db.execute(
-        select(Order)
+    """Retorna lista linha a linha de pedidos entregues para a aba 'Lista de Pedidos'."""
+    cost_sq = _order_cost_subquery()
+
+    rows = db.execute(
+        select(Order, cost_sq.c.cost, OrderRating.stars)
+        .outerjoin(cost_sq, cost_sq.c.order_id == Order.id)
+        .outerjoin(OrderRating, OrderRating.order_id == Order.id)
         .where(Order.status == OrderStatus.entregue)
         .order_by(Order.created_at.desc())
-    ).scalars().all()
+    ).all()
 
-    rows: list[OrderLedgerRow] = []
-    for o in orders:
-        cost = float(getattr(o, "cost_snapshot", 0) or 0)
-        rows.append(
+    ledger: list[OrderLedgerRow] = []
+    for o, cost, stars in rows:
+        cost = float(cost or 0)
+        ledger.append(
             OrderLedgerRow(
                 order_id=o.id,
                 created_at=o.created_at.isoformat(),
-                channel=getattr(o, "channel", "delivery"),
+                channel=o.channel.value if hasattr(o.channel, "value") else o.channel,
                 customer_name=o.customer_name,
                 cook_name=o.cook.name if o.cook else None,
                 driver_name=o.driver.name if o.driver else None,
@@ -160,8 +176,8 @@ def get_order_ledger(db: Session) -> list[OrderLedgerRow]:
                 total=o.total,
                 cost=cost,
                 profit=o.total - cost,
-                rating=float(getattr(o, "rating", None)) if getattr(o, "rating", None) is not None else None,
+                rating=float(stars) if stars is not None else None,
                 status=o.status.value,
             )
         )
-    return rows
+    return ledger

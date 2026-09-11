@@ -4,12 +4,16 @@ import type { Table } from "../../types/table";
 interface TableCardProps {
   table: Table;
   onOpenTab: (table: Table) => void;
+  onViewTab: (table: Table) => void;
+  onViewHistory: (table: Table) => void;
   loading?: boolean;
 }
 
 export function TableCard({
   table,
   onOpenTab,
+  onViewTab,
+  onViewHistory,
   loading = false,
 }: TableCardProps) {
   const isAvailable = table.status === "livre";
@@ -44,7 +48,7 @@ export function TableCard({
         </div>
       </div>
 
-      {isAvailable && (
+      {isAvailable ? (
         <button
           type="button"
           disabled={loading}
@@ -53,7 +57,24 @@ export function TableCard({
         >
           {loading ? "Abrindo..." : "Abrir comanda"}
         </button>
+      ) : (
+        <button
+          type="button"
+          disabled={loading}
+          onClick={() => onViewTab(table)}
+          className="mt-4 w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {loading ? "Abrindo..." : "Ver comanda"}
+        </button>
       )}
+
+      <button
+        type="button"
+        onClick={() => onViewHistory(table)}
+        className="mt-2 w-full rounded-lg border border-gray-200 px-4 py-2 text-xs font-medium text-gray-500 transition hover:bg-gray-50"
+      >
+        Histórico de comandas
+      </button>
     </div>
   );
 }

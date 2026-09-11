@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session, selectinload
 from app.models.order import (
     DeliveryFailure,
     Order,
+    OrderChannel,
     OrderItem,
     OrderItemTopping,
     OrderStatus,
@@ -170,6 +171,14 @@ def dispatch_order(
 
     order = _get_order(db, order_id)
 
+    # Corrigido: pedido de mesa (presencial) não tem entrega — não pode ser
+    # despachado pra um entregador. Sem isso, um pedido de comanda passava a
+    # aparecer no perfil do entregador junto com os pedidos de delivery.
+    if order.channel != OrderChannel.delivery:
+        raise ValueError(
+            "Pedidos presenciais não são despachados para entregador — use /serve."
+        )
+
     if order.status != OrderStatus.pronto_entrega:
         raise ValueError(
             "Somente pedidos prontos para entrega podem ser despachados."
@@ -278,6 +287,27 @@ def submit_rating(db: Session, order_id: str, stars: int) -> Order:
     )
 
     db.add(rating)
+    db.commit()
+
+    return _get_order(db, order.id)
+
+def mark_served(db: Session, order_id: str) -> Order:
+    """Pedido presencial pronto -> servido. Equivalente ao 'entregue' do
+    delivery, mas sem entregador — quem serve é o próprio garçom/cozinha
+    na mesa. Não existia nenhum caminho pra pedido de comanda chegar a
+    'entregue' sem passar (errado) pelo fluxo de despacho."""
+    order = _get_order(db, order_id)
+
+    if order.channel != OrderChannel.dine_in:
+        raise ValueError("Este endpoint é só para pedidos presenciais.")
+
+    if order.status != OrderStatus.pronto_entrega:
+        raise ValueError(
+            "Somente pedidos prontos podem ser marcados como servidos."
+        )
+
+    order.status = OrderStatus.entregue
+
     db.commit()
 
     return _get_order(db, order.id)

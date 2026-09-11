@@ -28,6 +28,7 @@ export function OrdersTable({ orders, onStatusChange }: OrdersTableProps) {
         <thead className="bg-gray-50 text-left text-xs font-semibold uppercase text-gray-500">
           <tr>
             <th className="px-4 py-3">Pedido</th>
+            <th className="px-4 py-3">Canal</th>
             <th className="px-4 py-3">Cliente</th>
             <th className="px-4 py-3">Total</th>
             <th className="px-4 py-3">Status</th>
@@ -40,6 +41,11 @@ export function OrdersTable({ orders, onStatusChange }: OrdersTableProps) {
           {orders.map((order) => (
             <tr key={order.id}>
               <td className="px-4 py-3 font-mono text-xs text-gray-500">#{order.id}</td>
+              <td className="px-4 py-3">
+                <Badge tone={order.channel === "dine_in" ? "info" : "neutral"}>
+                  {order.channel === "dine_in" ? "Presencial" : "Delivery"}
+                </Badge>
+              </td>
               <td className="px-4 py-3 text-gray-800">{order.customer.name}</td>
               <td className="px-4 py-3 text-gray-600">{formatCurrency(order.total)}</td>
               <td className="px-4 py-3">

@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from app.routers import reports
 
 from app.core.config import settings
-from app.routers import auth, orders, products, reports, staff, tenant, uploads  # ← reports adicionado
+from app.routers import auth, expenses, orders, products, reports, staff, tables, tabs, tenant, uploads
 
 
 Path("static/uploads").mkdir(parents=True, exist_ok=True)
@@ -31,6 +31,9 @@ app.include_router(staff.router)
 app.include_router(orders.router)
 app.include_router(uploads.router)
 app.include_router(reports.router)    # ← Issue #75: relatórios financeiros + Excel
+app.include_router(tables.router)     # ← Issue #70: mesas (presencial)
+app.include_router(tabs.router)       # ← Issue #70: comandas (presencial)
+app.include_router(expenses.router)   # ← Financeiro: despesas administrativas
 
 
 @app.get("/health", tags=["health"])
