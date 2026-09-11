@@ -4,6 +4,7 @@ import { RootLayout } from "./components/layout/RootLayout";
 import { StoreLayout } from "./components/layout/StoreLayout";
 import { AdminLayout } from "./components/layout/AdminLayout";
 import { KitchenLayout } from "./components/layout/KitchenLayout";
+import { GarcomLayout } from "./components/layout/GarcomLayout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DriverGate } from "./components/DriverGate";
 import { Spinner } from "./components/ui/Spinner";
@@ -27,6 +28,12 @@ const AdminDriversManagementPage = lazy(() => import("./pages/admin/DriversManag
 
 // Cozinha (P2)
 const KitchenOrdersPage = lazy(() => import("./pages/kitchen/KitchenOrdersPage").then((m) => ({ default: m.KitchenOrdersPage })));
+
+// Garçom (P2)
+const TablesPage = lazy(() => import("./pages/garcom/TablesPage").then((m) => ({
+default: m.TablesPage })));
+const TabPage = lazy(() => import("./pages/garcom/TabPage").then((m) => ({ default: m.TabPage })));
+
 
 // Entregador (P3)
 const DriverLoginPage = lazy(() => import("./pages/driver/DriverLoginPage").then((m) => ({ default: m.DriverLoginPage })));
@@ -88,6 +95,21 @@ export const router = createBrowserRouter([
           },
         ],
       },
+      // Garçom — protegido por role
+      {
+        path: "/garcom",
+        element: <ProtectedRoute allowedRoles={["garcom"]} redirectTo="/admin" />,
+        children: [
+        {
+           element: <GarcomLayout />,
+           children: [
+             { index: true, element: <Navigate to="mesas" replace /> },
+             { path: "mesas", element: <TablesPage /> },
+             { path: "comanda/:tabId", element: <TabPage /> },
+           ],
+        },
+      ],
+    }, 
       // Entregador — mostra login se não autenticado, pedidos se autenticado
       {
         path: "/entrega",
