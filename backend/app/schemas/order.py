@@ -1,12 +1,9 @@
 from datetime import datetime
 
-from app.models.order import DeliveryFailureReason, OrderStatus, PaymentMethod
+from app.models.order import DeliveryFailureReason, OrderChannel, OrderStatus, PaymentMethod
 from app.schemas.common import CamelModel
 from app.schemas.staff import StaffRef
 
-# Rótulos em PT-BR para cada motivo de falha — útil pra qualquer endpoint ou
-# validação que precise devolver uma mensagem amigável (o front também tem a
-# sua própria cópia em types/order.ts; manter os dois em sincronia).
 DELIVERY_FAILURE_REASON_LABELS: dict[DeliveryFailureReason, str] = {
     DeliveryFailureReason.cliente_ausente: "Cliente ausente no endereço",
     DeliveryFailureReason.endereco_nao_encontrado: "Endereço não encontrado",
@@ -46,6 +43,7 @@ class OrderItemInput(OrderItemBase):
 
 class OrderItemOut(OrderItemBase):
     id: str
+    cost: float = 0  # Fase 3: custo congelado (snapshot). Usado pelo relatório do P4.
     toppings: list[OrderItemToppingOut] = []
 
 
@@ -112,6 +110,8 @@ class OrderOut(CamelModel):
     delivery_fee: float
     total: float
     status: OrderStatus
+    channel: OrderChannel = OrderChannel.delivery  # Fase 3
+    tab_id: str | None = None                       # Fase 3 (presencial)
     created_at: datetime
 
     cook: StaffRef | None = None
