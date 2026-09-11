@@ -203,6 +203,15 @@ def pay_tab(db: Session, tenant_id: str, tab_id: str) -> Tab | None:
     if tab.closed_at is None:
         tab.closed_at = datetime.now(timezone.utc)
 
+    # Corrigido: pagar a comanda é o sinal real de venda concluída pro
+    # presencial — não pode depender de alguém ter clicado "Servir na mesa"
+    # na cozinha pra cada item. Sem isso, o pedido ficava parado em
+    # "recebido"/"preparo" pra sempre e o financeiro (que só soma pedidos
+    # com status "entregue") nunca contava o dinheiro das mesas.
+    for order in tab.orders:
+        if order.status != OrderStatus.entregue:
+            order.status = OrderStatus.entregue
+
     # Libera a mesa se não sobrar comanda ativa (aberta/fechada) nela.
     ativos = db.scalar(
         select(Tab).where(

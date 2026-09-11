@@ -237,6 +237,25 @@ mensagem de erro do botão PDF, que antes mostrava sempre o mesmo texto
 genérico ("falta reportlab") não importa qual fosse o erro real — agora
 mostra o `detail` que vem do backend.
 
+## 9. Dinheiro das mesas não entrava no financeiro
+
+Reportado pelo Tiago: só as entregas apareciam no financeiro, o dinheiro das
+mesas não. Causa: `pay_tab` (backend) só mudava o status da **comanda**
+para "paga" — nunca tocava no status dos **pedidos** dentro dela. Como o
+financeiro (`revenue` em `BiDashboardPage.tsx`, e também `/reports/summary`
+e `/reports/ledger`) só soma pedidos com status `entregue`, e nada além do
+botão manual "Servir na mesa" (cozinha) movia um pedido de mesa pra
+`entregue`, o dinheiro nunca contava — a menos que alguém lembrasse de
+clicar nesse botão pra **cada item** de **cada comanda**, o que na prática
+ninguém faz, porque o garçom já fechou e cobrou a conta.
+
+Corrigido: pagar a comanda agora marca todos os pedidos dela como
+`entregue` automaticamente (se ainda não estiverem) — pagamento é o sinal
+real de venda concluída pro presencial, não devia depender de mais um
+clique manual em outra tela. Testado o fluxo completo (abrir mesa → abrir
+comanda → lançar item → fechar → pagar) confirmando que o pedido vira
+`entregue` e passa a contar no financeiro.
+
 ## 3. O que ainda falta (não corrigido neste pacote)
 
 - **Teste de ponta a ponta do fluxo presencial.** `backend/tests/` cobre
