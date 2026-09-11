@@ -10,6 +10,7 @@ from app.crud.order import (
     mark_delivered,
     mark_failed,
     mark_ready,
+    mark_served,
     submit_rating,
 )
 from app.crud.tenant import get_tenant
@@ -83,6 +84,8 @@ def _order_to_out(order: Order) -> OrderOut:
             "delivery_fee": order.delivery_fee,
             "total": order.total,
             "status": order.status,
+            "channel": order.channel,
+            "tab_id": order.tab_id,
             "created_at": order.created_at,
             "cook": (
                 {
@@ -330,6 +333,31 @@ def ready_order_route(
 
     try:
         order = mark_ready(
+            db,
+            order_id,
+        )
+    except ValueError as error:
+        raise _handle_order_error(error) from error
+
+    return _order_to_out(order)
+
+
+@router.patch(
+    "/{order_id}/serve",
+    response_model=OrderOut,
+    summary="Marca pedido presencial como servido (sem entregador)",
+)
+def serve_order_route(
+    order_id: str,
+    db: Session = Depends(get_db),
+    _staff: Staff = Depends(
+        require_role([StaffRole.cozinha, StaffRole.garcom])
+    ),
+) -> OrderOut:
+    """Equivalente ao 'entregue' do delivery, mas pra pedido de mesa — sem
+    passar por entregador. Cozinha ou garçom podem confirmar."""
+    try:
+        order = mark_served(
             db,
             order_id,
         )

@@ -8,6 +8,7 @@ import {
   getDrivers,
   claimOrderForCooking,
   markOrderReady,
+  markOrderServed,
   dispatchOrder,
 } from "../../services/kitchenService";
 import type { Order } from "../../types/order";
@@ -193,6 +194,13 @@ export function KitchenOrdersPage() {
                   `dispatch:${item.id}`,
                   `Pedido #${item.id.slice(0, 8)} enviado com ${driver.name}.`,
                   () => dispatchOrder(item.id, driver)
+                )
+              }
+              onServe={(item) =>
+                void runAction(
+                  `serve:${item.id}`,
+                  `Comanda #${item.id.slice(0, 8)} servida na mesa.`,
+                  () => markOrderServed(item.id)
                 )
               }
             />

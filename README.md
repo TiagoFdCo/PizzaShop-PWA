@@ -10,9 +10,9 @@ administrador, cozinha e entregador. O backend é uma API real em
 ### 1. Backend (API + banco)
 
 ```bash
-cd backend
-docker-compose up --build          # sobe Postgres + API já migrada em http://localhost:8000
-docker-compose exec api python -m scripts.seed   # popula cardápio, tenant e usuários padrão
+docker-compose up --build --detach     # sobe Postgres + API em http://localhost:8000 (compose fica na raiz do repo, não em backend/)
+docker-compose exec backend alembic upgrade head        # roda as migrations (não acontece sozinho)
+docker-compose exec backend python -m scripts.seed       # popula cardápio, tenant, usuários e mesas padrão
 ```
 
 Swagger interativo: `http://localhost:8000/docs`. Detalhes e execução sem
@@ -39,6 +39,7 @@ Abra o endereço exibido pelo Vite (`http://localhost:5173`).
 | Admin      | `/admin`    | `admin`   | `admin123`   |
 | Cozinha    | `/cozinha`  | `cozinha` | `cozinha123` |
 | Entregador | `/entrega`  | `entrega` | `entrega123` |
+| Garçom     | `/garcom`   | `garcom`  | `garcom123`  |
 
 Loja (cliente, sem login): `/`, `/cardapio`, `/produto/:id`, `/carrinho`,
 `/checkout`, `/pagamento`, `/pedido/:id`.

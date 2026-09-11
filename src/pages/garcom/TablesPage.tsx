@@ -3,7 +3,7 @@ import { AlertCircle, RefreshCw, Utensils } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { TableCard } from "../../components/garcom/TableCard";
 import { listTables } from "../../services/tableService";
-import { openTab } from "../../services/tabService";
+import { openTab, listTabs } from "../../services/tabService";
 import { useAuthStore } from "../../store/useAuthStore";
 import type { Table } from "../../types/table";
 
@@ -13,6 +13,10 @@ export function TablesPage() {
   const session = useAuthStore((state) => state.session);
 
   const [tables, setTables] = useState<Table[]>([]);
+  // Corrigido (bug: comanda aberta ficava inacessível depois de sair da
+  // tela): mapa mesa -> id da comanda ABERTA daquela mesa, pra "Ver
+  // comanda" navegar direto pra ela em vez de só saber abrir uma nova.
+  const [openTabByTable, setOpenTabByTable] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [openingTableId, setOpeningTableId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -22,8 +26,14 @@ export function TablesPage() {
       setLoading(true);
       setError(null);
 
-      const data = await listTables();
-      setTables(data);
+      const [tablesData, openTabs] = await Promise.all([
+        listTables(),
+        listTabs({ status: "aberta" }),
+      ]);
+      setTables(tablesData);
+      setOpenTabByTable(
+        Object.fromEntries(openTabs.map((tab) => [tab.tableId, tab.id]))
+      );
     } catch (err) {
       setError(
         err instanceof Error
@@ -62,6 +72,21 @@ export function TablesPage() {
     } finally {
       setOpeningTableId(null);
     }
+  }
+
+  function handleViewTab(table: Table) {
+    const tabId = openTabByTable[table.id];
+    if (!tabId) {
+      setError(
+        `A mesa ${table.number} está ocupada mas não encontrei a comanda aberta dela — atualize a página.`
+      );
+      return;
+    }
+    navigate(`/garcom/comanda/${tabId}`);
+  }
+
+  function handleViewHistory(table: Table) {
+    navigate(`/garcom/mesas/${table.id}/historico`);
   }
 
   return (
@@ -120,6 +145,8 @@ export function TablesPage() {
               key={table.id}
               table={table}
               onOpenTab={handleOpenTab}
+              onViewTab={handleViewTab}
+              onViewHistory={handleViewHistory}
               loading={openingTableId === table.id}
             />
           ))}

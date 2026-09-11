@@ -1,0 +1,61 @@
+version: "3.9"
+
+services:
+
+  # ── Banco de dados ──────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     ${POSTGRES_USER:-pizzashop}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pizzashop_secret}
+      POSTGRES_DB:       ${POSTGRES_DB:-pizzashop}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pizzashop}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Backend FastAPI ─────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL:      postgresql+psycopg2://${POSTGRES_USER:-pizzashop}:${POSTGRES_PASSWORD:-pizzashop_secret}@db:5432/${POSTGRES_DB:-pizzashop}
+      JWT_SECRET:        ${JWT_SECRET:-troque-em-producao}
+      CORS_ORIGINS:      ${CORS_ORIGINS:-http://localhost}
+      REPORTS_USE_MOCK:  ${REPORTS_USE_MOCK:-false}
+    volumes:
+      - backend_uploads:/app/static/uploads
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Frontend Nginx ──────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+
+volumes:
+  db_data:
+  backend_uploads:

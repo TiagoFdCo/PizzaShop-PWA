@@ -26,7 +26,7 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   falha_entrega: "Falha na entrega",
 };
 
-export type StaffRole = "admin" | "cozinha" | "entrega";
+export type StaffRole = "admin" | "cozinha" | "entrega" | "garcom";
 
 export interface OrderStaffRef {
   id: string;
@@ -93,6 +93,8 @@ export interface Order {
   deliveryFee: number;
   total: number;
   status: OrderStatus;
+  channel: "delivery" | "dine_in";
+  tabId: string | null;
   createdAt: string;
 
   cook: OrderStaffRef | null;
@@ -103,7 +105,7 @@ export interface Order {
 
 export type OrderInput = Omit<
   Order,
-  "id" | "status" | "createdAt" | "cook" | "driver" | "deliveryFailure" | "items" | "rating"
+  "id" | "status" | "channel" | "tabId" | "createdAt" | "cook" | "driver" | "deliveryFailure" | "items" | "rating"
 > & {
   items: CartItem[];
 };

@@ -14,6 +14,10 @@ let authToken: string | null = null;
 export function setAuthToken(token: string | null): void {
   authToken = token;
 }
+/** Usado por downloads binários (Excel/PDF) que não passam por apiFetch. */
+export function getAuthToken(): string | null {
+  return authToken;
+}
 
 interface ApiFetchOptions extends RequestInit {
   useMockApi?: boolean; // true só pra /orders, até o P2 terminar os endpoints reais

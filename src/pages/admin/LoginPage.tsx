@@ -24,6 +24,7 @@ export function LoginPage() {
       const role = useAuthStore.getState().session?.staff.role;
       if (role === "cozinha") navigate("/cozinha/pedidos");
       else if (role === "entrega") navigate("/entrega");
+      else if (role === "garcom") navigate("/garcom");
       else navigate("/admin/dashboard");
     } catch {
       // erro já fica disponível via useAuthStore().error

@@ -25,6 +25,8 @@ const AdminCustomizationPage = lazy(() => import("./pages/admin/CustomizationPag
 const AdminMenuManagementPage = lazy(() => import("./pages/admin/MenuManagementPage").then((m) => ({ default: m.MenuManagementPage })));
 const AdminOrdersManagementPage = lazy(() => import("./pages/admin/OrdersManagementPage").then((m) => ({ default: m.OrdersManagementPage })));
 const AdminDriversManagementPage = lazy(() => import("./pages/admin/DriversManagementPage").then((m) => ({ default: m.DriversManagementPage })));
+// Corrigido: BiDashboardPage existia pronta mas nunca tinha sido roteada.
+const AdminBiDashboardPage = lazy(() => import("./pages/admin/BiDashboardPage").then((m) => ({ default: m.BiDashboardPage })));
 
 // Cozinha (P2)
 const KitchenOrdersPage = lazy(() => import("./pages/kitchen/KitchenOrdersPage").then((m) => ({ default: m.KitchenOrdersPage })));
@@ -33,6 +35,7 @@ const KitchenOrdersPage = lazy(() => import("./pages/kitchen/KitchenOrdersPage")
 const TablesPage = lazy(() => import("./pages/garcom/TablesPage").then((m) => ({
 default: m.TablesPage })));
 const TabPage = lazy(() => import("./pages/garcom/TabPage").then((m) => ({ default: m.TabPage })));
+const TableHistoryPage = lazy(() => import("./pages/garcom/TableHistoryPage").then((m) => ({ default: m.TableHistoryPage })));
 
 
 // Entregador (P3)
@@ -75,6 +78,7 @@ export const router = createBrowserRouter([
                   { path: "cardapio", element: <AdminMenuManagementPage /> },
                   { path: "pedidos", element: <AdminOrdersManagementPage /> },
                   { path: "entregadores", element: <AdminDriversManagementPage /> },
+                  { path: "financeiro", element: <AdminBiDashboardPage /> },
                 ],
               },
             ],
@@ -105,6 +109,7 @@ export const router = createBrowserRouter([
            children: [
              { index: true, element: <Navigate to="mesas" replace /> },
              { path: "mesas", element: <TablesPage /> },
+             { path: "mesas/:tableId/historico", element: <TableHistoryPage /> },
              { path: "comanda/:tabId", element: <TabPage /> },
            ],
         },

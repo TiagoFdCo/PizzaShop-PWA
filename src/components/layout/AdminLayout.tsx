@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Palette, Pizza, ClipboardList, Bike, LogOut, Store } from "lucide-react";
+import { LayoutDashboard, Palette, Pizza, ClipboardList, Bike, LogOut, Store, LineChart } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useTenantStore } from "../../store/useTenantStore";
 
@@ -9,6 +9,8 @@ const NAV_ITEMS = [
   { to: "/admin/cardapio", label: "Cardápio", icon: Pizza },
   { to: "/admin/pedidos", label: "Pedidos", icon: ClipboardList },
   { to: "/admin/entregadores", label: "Entregadores", icon: Bike },
+  // Corrigido: painel financeiro/BI existia pronto mas não tinha link nenhum.
+  { to: "/admin/financeiro", label: "Financeiro", icon: LineChart },
 ];
 
 export function AdminLayout() {

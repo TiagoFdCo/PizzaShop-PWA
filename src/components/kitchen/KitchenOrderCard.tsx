@@ -1,4 +1,4 @@
-import { ChefHat, CheckCircle2, Clock3, Send, UserRound } from "lucide-react";
+import { ChefHat, CheckCircle2, Clock3, Send, Utensils, UserRound } from "lucide-react";
 import { formatCurrency } from "../../lib/formatCurrency";
 import type { Order } from "../../types/order";
 import type { Staff } from "../../types/staff";
@@ -11,6 +11,7 @@ interface KitchenOrderCardProps {
   onClaim: (order: Order) => void;
   onReady: (order: Order) => void;
   onDispatch: (order: Order, driver: Staff) => void;
+  onServe: (order: Order) => void;
 }
 
 const STATUS_TEXT: Record<Order["status"], string> = {
@@ -29,13 +30,17 @@ export function KitchenOrderCard({
   onClaim,
   onReady,
   onDispatch,
+  onServe,
 }: KitchenOrderCardProps) {
   const actionBusy = busyAction !== null;
+  const isDineIn = order.channel === "dine_in";
   return (
     <article className="card flex h-full flex-col gap-4" aria-label={`Pedido ${order.id}`}>
       <header className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Pedido</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+            {isDineIn ? "Comanda" : "Pedido"}
+          </p>
           <h2 className="text-xl font-bold text-gray-900">#{order.id}</h2>
           <p className="mt-1 text-sm text-gray-600">{order.customer.name}</p>
         </div>
@@ -60,10 +65,16 @@ export function KitchenOrderCard({
         ))}
       </div>
 
-      <div className="grid gap-2 text-sm text-gray-600 sm:grid-cols-2">
-        <p><strong>Endereço:</strong> {order.customer.address}</p>
-        <p><strong>Telefone:</strong> {order.customer.phone}</p>
-      </div>
+      {isDineIn ? (
+        <p className="flex items-center gap-2 text-sm text-gray-600">
+          <Utensils size={15} /> Consumo no local — {order.customer.name}
+        </p>
+      ) : (
+        <div className="grid gap-2 text-sm text-gray-600 sm:grid-cols-2">
+          <p><strong>Endereço:</strong> {order.customer.address}</p>
+          <p><strong>Telefone:</strong> {order.customer.phone}</p>
+        </div>
+      )}
 
       {order.cook && (
         <p className="flex items-center gap-2 text-xs text-gray-500">
@@ -97,7 +108,14 @@ export function KitchenOrderCard({
           </Button>
         )}
 
-        {order.status === "pronto_entrega" && (
+        {order.status === "pronto_entrega" && isDineIn && (
+          <Button disabled={actionBusy} onClick={() => onServe(order)} className="w-full gap-2">
+            <Utensils size={17} />
+            {busyAction === `serve:${order.id}` ? "Salvando..." : "Servir na mesa"}
+          </Button>
+        )}
+
+        {order.status === "pronto_entrega" && !isDineIn && (
           <form
             className="space-y-2"
             onSubmit={(event) => {

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import os
+from datetime import datetime, timezone
 from io import BytesIO
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
@@ -25,6 +26,16 @@ try:
     _HAS_OPENPYXL = True
 except ImportError:
     _HAS_OPENPYXL = False
+
+try:
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4, landscape
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+    from reportlab.lib.units import cm
+    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+    _HAS_REPORTLAB = True
+except ImportError:
+    _HAS_REPORTLAB = False
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -101,6 +112,35 @@ def export_xlsx(
         buffer,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": 'attachment; filename="relatorio_pizzashop.xlsx"'},
+    )
+
+
+# ─── Export PDF ───────────────────────────────────────────────────────────────
+
+@router.get("/export.pdf")
+def export_pdf(
+    db: Session = Depends(get_db),
+    _staff=Depends(require_role([StaffRole.admin])),
+) -> StreamingResponse:
+    """
+    Gera e retorna um PDF em memória com o mesmo conteúdo do Excel:
+    resumo financeiro (KPIs, por canal, por staff) + lista de pedidos.
+    Requer reportlab instalado (adicionar a requirements.txt).
+    """
+    if not _HAS_REPORTLAB:
+        raise HTTPException(
+            status_code=503,
+            detail="reportlab não está instalado no servidor. Adicione ao requirements.txt.",
+        )
+
+    summary = _get_summary(db)
+    ledger = _get_ledger(db)
+    buffer = _build_pdf(summary, ledger)
+
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": 'attachment; filename="relatorio_pizzashop.pdf"'},
     )
 
 
@@ -245,3 +285,133 @@ def _build_sheet_ledger(wb, ledger: list[OrderLedgerRow]) -> None:
         ]
         for c, v in enumerate(values, 1):
             ws.cell(row=r, column=c, value=v)
+
+
+# ─── Builder do PDF ───────────────────────────────────────────────────────────
+
+_PDF_RED = colors.HexColor("#C0392B") if _HAS_REPORTLAB else None
+_PDF_RED_DARK = colors.HexColor("#922B21") if _HAS_REPORTLAB else None
+_PDF_STRIPE = colors.HexColor("#FBEEEE") if _HAS_REPORTLAB else None
+_PDF_GRID = colors.HexColor("#E0E0E0") if _HAS_REPORTLAB else None
+
+
+def _pdf_table_style(font_size: int = 8, header: bool = True) -> "TableStyle":
+    style = [
+        ("FONTSIZE", (0, 0), (-1, -1), font_size),
+        ("GRID", (0, 0), (-1, -1), 0.25, _PDF_GRID),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("TOPPADDING", (0, 0), (-1, -1), 3),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+        ("LEFTPADDING", (0, 0), (-1, -1), 4),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+    ]
+    if header:
+        style += [
+            ("BACKGROUND", (0, 0), (-1, 0), _PDF_RED),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, _PDF_STRIPE]),
+        ]
+    return TableStyle(style)
+
+
+def _build_pdf(summary: FinancialSummary, ledger: list[OrderLedgerRow]) -> BytesIO:
+    """Monta o PDF (resumo + lista de pedidos) e retorna um BytesIO pronto pra streaming."""
+    buf = BytesIO()
+    doc = SimpleDocTemplate(
+        buf,
+        pagesize=landscape(A4),
+        leftMargin=1.5 * cm, rightMargin=1.5 * cm,
+        topMargin=1.3 * cm, bottomMargin=1.3 * cm,
+        title="Relatório Financeiro — PizzaShop",
+    )
+
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle("PizzaTitle", parent=styles["Title"], textColor=_PDF_RED, fontSize=18)
+    section_style = ParagraphStyle(
+        "PizzaSection", parent=styles["Heading2"], textColor=_PDF_RED_DARK,
+        fontSize=12, spaceBefore=14, spaceAfter=6,
+    )
+    meta_style = ParagraphStyle("PizzaMeta", parent=styles["Normal"], textColor=colors.HexColor("#666666"))
+
+    elements = [
+        Paragraph("Relatório Financeiro — PizzaShop", title_style),
+        Paragraph(
+            datetime.now(timezone.utc).strftime("Gerado em %d/%m/%Y às %H:%M UTC"),
+            meta_style,
+        ),
+        Spacer(1, 10),
+    ]
+
+    # ── Indicadores gerais ──
+    elements.append(Paragraph("Indicadores gerais", section_style))
+    rating_str = f"{summary.average_rating:.1f} ★" if summary.average_rating is not None else "N/A"
+    kpi_rows = [
+        ["Faturamento total", _currency(summary.total_revenue)],
+        ["Custo total", _currency(summary.total_cost)],
+        ["Lucro bruto", _currency(summary.gross_profit)],
+        ["Total de pedidos", str(summary.orders_count)],
+        ["Avaliação média", rating_str],
+    ]
+    kpi_table = Table(kpi_rows, colWidths=[6 * cm, 6 * cm])
+    kpi_table.setStyle(_pdf_table_style(header=False))
+    elements.append(kpi_table)
+
+    # ── Por canal ──
+    elements.append(Paragraph("Por canal de venda", section_style))
+    channel_rows = [["Canal", "Faturamento", "Custo", "Lucro"]] + [
+        [
+            "Delivery" if ch.channel == "delivery" else "Presencial",
+            _currency(ch.revenue), _currency(ch.cost), _currency(ch.profit),
+        ]
+        for ch in summary.channel_breakdown
+    ] or [["Canal", "Faturamento", "Custo", "Lucro"]]
+    channel_table = Table(channel_rows, colWidths=[5 * cm, 4.5 * cm, 4.5 * cm, 4.5 * cm])
+    channel_table.setStyle(_pdf_table_style())
+    elements.append(channel_table)
+
+    # ── Por staff ──
+    elements.append(Paragraph("Por entregador / garçom", section_style))
+    staff_rows = [["Nome", "Função", "Pedidos", "Faturamento"]] + [
+        [
+            st.name, "Entregador" if st.role == "entrega" else "Garçom",
+            str(st.orders_count), _currency(st.revenue),
+        ]
+        for st in summary.staff_breakdown
+    ]
+    staff_table = Table(staff_rows, colWidths=[5 * cm, 4.5 * cm, 3 * cm, 4.5 * cm])
+    staff_table.setStyle(_pdf_table_style())
+    elements.append(staff_table)
+
+    # ── Lista de pedidos ──
+    elements.append(Paragraph("Lista de pedidos", section_style))
+    ledger_header = [
+        "Pedido", "Data/Hora", "Canal", "Cliente",
+        "Cozinheiro", "Entregador", "Total", "Custo", "Lucro", "Nota", "Status",
+    ]
+    ledger_rows = [ledger_header]
+    for row in ledger:
+        ledger_rows.append([
+            row.order_id[:8],
+            row.created_at.replace("T", " ").replace("Z", "")[:16],
+            "Delivery" if row.channel == "delivery" else "Presencial",
+            row.customer_name,
+            row.cook_name or "—",
+            row.driver_name or "—",
+            _currency(row.total),
+            _currency(row.cost),
+            _currency(row.profit),
+            f"{row.rating:.1f}★" if row.rating is not None else "—",
+            row.status,
+        ])
+    ledger_table = Table(
+        ledger_rows,
+        colWidths=[2 * cm, 3 * cm, 2.3 * cm, 4 * cm, 3 * cm, 3 * cm, 2.3 * cm, 2.3 * cm, 2.3 * cm, 1.8 * cm, 2.8 * cm],
+        repeatRows=1,
+    )
+    ledger_table.setStyle(_pdf_table_style(font_size=7))
+    elements.append(ledger_table)
+
+    doc.build(elements)
+    buf.seek(0)
+    return buf
