@@ -32,6 +32,8 @@ const KitchenOrdersPage = lazy(() => import("./pages/kitchen/KitchenOrdersPage")
 // Garçom (P2)
 const TablesPage = lazy(() => import("./pages/garcom/TablesPage").then((m) => ({
 default: m.TablesPage })));
+const TabPage = lazy(() => import("./pages/garcom/TabPage").then((m) => ({ default: m.TabPage })));
+
 
 // Entregador (P3)
 const DriverLoginPage = lazy(() => import("./pages/driver/DriverLoginPage").then((m) => ({ default: m.DriverLoginPage })));
@@ -103,6 +105,7 @@ export const router = createBrowserRouter([
            children: [
              { index: true, element: <Navigate to="mesas" replace /> },
              { path: "mesas", element: <TablesPage /> },
+             { path: "comanda/:tabId", element: <TabPage /> },
            ],
         },
       ],
