@@ -1,5 +1,6 @@
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { ShoppingCart } from "lucide-react";
+import { ThemeToggle } from "../ui/ThemeToggle";
 import { useTenantStore } from "../../store/useTenantStore";
 import { useCartStore } from "../../store/useCartStore";
 
@@ -20,7 +21,8 @@ export function StoreLayout() {
             </span>
           </Link>
 
-          <nav className="flex items-center gap-5 text-sm font-semibold">
+          <nav className="flex items-center gap-3 text-sm font-semibold">
+            <ThemeToggle compact />
             <NavLink to="/cardapio" className={({ isActive }) => `store-nav-link ${isActive ? "active text-primary" : "hover:text-primary"}`}>
               Cardápio
             </NavLink>
