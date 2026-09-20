@@ -22,19 +22,19 @@
   --pizza-shadow: 0 18px 50px rgba(58, 29, 19, .10);
 
   /* P4: semantic UI colors. These are intentionally separate from tenant brand vars. */
-  --ui-bg: #f8f3ec;
-  --ui-surface: #ffffff;
-  --ui-surface-soft: #fffaf4;
-  --ui-text: #2a1a15;
-  --ui-text-strong: #21130f;
-  --ui-text-muted: #786b64;
-  --ui-text-subtle: #9a8c85;
-  --ui-border: #eaded2;
-  --ui-border-soft: #f0e7df;
-  --ui-input-bg: rgba(255,255,255,.92);
-  --ui-input-focus-bg: #ffffff;
-  --ui-hover: #f5efe8;
-  --ui-shadow: 0 18px 50px rgba(58, 29, 19, .10);
+  --ui-bg: #14160f;
+  --ui-surface: #1e2117;
+  --ui-surface-soft: #262a1c;
+  --ui-text: #eef0e6;
+  --ui-text-strong: #f9faf3;
+  --ui-text-muted: #b9bdac;
+  --ui-text-subtle: #8e9280;
+  --ui-border: #35392a;
+  --ui-border-soft: #2a2d20;
+  --ui-input-bg: #1e2117;
+  --ui-input-focus-bg: #262a1c;
+  --ui-hover: #262a1c;
+  --ui-shadow: 0 18px 50px rgba(0,0,0,.32);
 }
 
 * { box-sizing: border-box; }
@@ -345,8 +345,19 @@ html[data-theme="dark"] {
   --ui-shadow: 0 18px 50px rgba(0,0,0,.28);
 }
 
-html[data-theme="dark"],
-html[data-theme="dark"] body { background-color: var(--ui-bg); color: var(--ui-text); }
+html[data-theme="dark"] { background-color: var(--ui-bg); color: var(--ui-text); }
+
+/* O seletor acima só troca background-color; o body define um `background`
+   com camadas de gradiente claro (radial + linear) que ficam por cima e
+   continuam visíveis mesmo com --ui-bg escuro. Por isso o fundo precisa do
+   shorthand `background` completo aqui, não apenas background-color. */
+html[data-theme="dark"] body {
+  color: var(--ui-text);
+  background:
+    radial-gradient(circle at 8% 4%, rgba(211,162,76,.08), transparent 22rem),
+    radial-gradient(circle at 92% 18%, rgba(181,47,39,.05), transparent 25rem),
+    var(--ui-bg);
+}
 
 /* Tailwind utility bridge: keeps existing screens dark without touching tenant --color-* vars. */
 html[data-theme="dark"] .bg-gray-50 { background-color: var(--ui-bg) !important; }
