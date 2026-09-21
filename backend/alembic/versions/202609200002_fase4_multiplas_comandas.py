@@ -1,6 +1,6 @@
 """fase4 P5: multiplas comandas por mesa (tab.label + indice unico parcial)
 
-Revision ID: 202609200001
+Revision ID: 202609200002
 Revises: 202609110001
 Create Date: 2026-09-20 00:00:01
 
@@ -13,7 +13,7 @@ from typing import Sequence, Union
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "202609200001"
+revision: str = "202609200002"
 down_revision: Union[str, None] = "202609110001"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
