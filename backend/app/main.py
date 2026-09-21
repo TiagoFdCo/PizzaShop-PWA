@@ -4,7 +4,6 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from app.routers import reports
 
 from app.core.config import settings
 from app.routers import (
@@ -16,6 +15,7 @@ from app.routers import (
     orders,
     payments,
     products,
+    recommendations,
     reports,
     staff,
     tables,
@@ -44,6 +44,7 @@ app.include_router(customer_auth.router)  # ← Fase 4 (P1): login/cadastro de c
 app.include_router(payments.router)       # ← Fase 4 (P1): pagamento concreto (Mercado Pago)
 app.include_router(tenant.router)
 app.include_router(products.router)
+app.include_router(recommendations.router)
 app.include_router(staff.router)
 app.include_router(orders.router)
 app.include_router(uploads.router)
