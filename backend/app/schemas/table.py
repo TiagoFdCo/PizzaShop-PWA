@@ -54,6 +54,7 @@ class TabOut(CamelModel):
     id: str
     table_id: str
     table_number: int
+    label: str | None = None  # "A", "B"... — None em comandas anteriores à Fase 4
     waiter_id: str | None = None
     status: TabStatus
     opened_at: datetime

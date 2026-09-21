@@ -15,6 +15,7 @@ export interface Tab {
   id: string;
   tableId: string;
   tableNumber: number;
+  label: string | null; // "A", "B"... — null em comandas anteriores à Fase 4
   waiterId: string | null;
   status: TabStatus;
   openedAt: string;

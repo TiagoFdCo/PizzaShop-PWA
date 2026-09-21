@@ -28,6 +28,7 @@ def _tab_to_out(tab: Tab) -> TabOut:
         id=tab.id,
         table_id=tab.table_id,
         table_number=tab.table.number,
+        label=tab.label,
         waiter_id=tab.waiter_id,
         status=tab.status,
         opened_at=tab.opened_at,

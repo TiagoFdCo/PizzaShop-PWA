@@ -16,6 +16,7 @@ import {
   payTab,
 } from "../../services/tabService";
 import { formatCurrency } from "../../lib/formatCurrency";
+import { tabName } from "../../lib/tabLabel";
 import type { CartItem } from "../../types/order";
 import type { Pizza, Size } from "../../types/product";
 import type { Tab } from "../../types/tab";
@@ -268,7 +269,7 @@ export function TabPage() {
           </button>
 
           <h1 className="text-2xl font-bold text-gray-900">
-            Comanda — Mesa {tab.tableNumber}
+                        Mesa {tab.tableNumber} — {tabName(tab)}
           </h1>
 
           <p className="mt-1 text-sm text-gray-500">
