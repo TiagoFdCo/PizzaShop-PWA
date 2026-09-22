@@ -32,6 +32,13 @@ services:
       JWT_SECRET:        ${JWT_SECRET:-troque-em-producao}
       CORS_ORIGINS:      ${CORS_ORIGINS:-http://localhost,http://localhost:5173}
       REPORTS_USE_MOCK:  ${REPORTS_USE_MOCK:-false}
+      # Mercado Pago (Checkout Pro) — Fase 4, P1. Sem MP_ACCESS_TOKEN, o
+      # backend sobe normal; só falha (500, com mensagem clara) se alguém
+      # tentar pagar com pix/cartão. Ver docs/fase4/P1-pagamento-concreto.md.
+      MP_ACCESS_TOKEN:   ${MP_ACCESS_TOKEN:-}
+      MP_PUBLIC_KEY:     ${MP_PUBLIC_KEY:-}
+      FRONTEND_URL:      ${FRONTEND_URL:-http://localhost}
+      BACKEND_URL:       ${BACKEND_URL:-http://localhost:8000}
     volumes:
       - backend_uploads:/app/static/uploads
     ports:

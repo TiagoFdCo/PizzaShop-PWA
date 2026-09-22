@@ -26,6 +26,8 @@ from app.models.loyalty import (  # noqa: F401  (Fase 4 — P3)
     LoyaltyTransaction,
     LoyaltyTransactionType,
 )
+from app.models.customer import Customer  # noqa: F401  (Fase 4 — P1)
+from app.models.payment import Payment, PaymentStatus  # noqa: F401  (Fase 4 — P1)
 
 __all__ = [
     "Tenant",
@@ -54,4 +56,7 @@ __all__ = [
     "LoyaltyAccount",
     "LoyaltyTransaction",
     "LoyaltyTransactionType",
+    "Customer",
+    "Payment",
+    "PaymentStatus",
 ]

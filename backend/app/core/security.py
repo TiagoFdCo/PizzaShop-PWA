@@ -37,6 +37,27 @@ def create_access_token(staff_id: str, role: str, name: str) -> str:
     return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
 
+def create_customer_token(customer_id: str, name: str) -> str:
+    """
+    Token de CLIENTE (loja pública), separado do de staff. Carrega dois
+    claims redundantes de propósito:
+      - "role": "customer"  — contrato combinado com o P3 (deps_customer.py),
+        que já está em produção lendo esse campo pro cupom/fidelidade.
+      - "type": "customer"  — usado por deps.py (get_current_customer),
+        pensado antes de saber que o P3 tinha adotado "role".
+    Mantemos os dois pra não quebrar nenhum dos dois lados.
+    """
+    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_EXPIRE_MINUTES)
+    payload: dict[str, Any] = {
+        "sub": customer_id,
+        "role": "customer",
+        "type": "customer",
+        "name": name,
+        "exp": expire,
+    }
+    return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+
+
 def decode_access_token(token: str) -> dict[str, Any] | None:
     """Retorna o payload decodificado, ou None se o token for inválido/expirado."""
     try:

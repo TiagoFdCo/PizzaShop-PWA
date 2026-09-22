@@ -39,6 +39,7 @@ def _get_order(db: Session, order_id: str) -> Order:
 def create_order(db: Session, tenant_id: str, data: OrderInput, customer_id: str | None = None) -> Order:
     order = Order(
         tenant_id=tenant_id,
+        customer_id=customer_id,  # Fase 4 — P1
         customer_name=data.customer.name,
         customer_address=data.customer.address,
         customer_phone=data.customer.phone,

@@ -7,8 +7,22 @@ from fastapi.staticfiles import StaticFiles
 from app.routers import reports
 
 from app.core.config import settings
-from app.routers import auth, expenses, orders, products, reports, staff, tables, tabs, tenant, uploads
-from app.routers import coupons, loyalty  # Fase 4 — P3
+from app.routers import (
+    auth,
+    coupons,
+    customer_auth,
+    expenses,
+    loyalty,
+    orders,
+    payments,
+    products,
+    reports,
+    staff,
+    tables,
+    tabs,
+    tenant,
+    uploads,
+)
 
 
 Path("static/uploads").mkdir(parents=True, exist_ok=True)
@@ -26,6 +40,8 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(auth.router)
+app.include_router(customer_auth.router)  # ← Fase 4 (P1): login/cadastro de cliente com CPF
+app.include_router(payments.router)       # ← Fase 4 (P1): pagamento concreto (Mercado Pago)
 app.include_router(tenant.router)
 app.include_router(products.router)
 app.include_router(staff.router)

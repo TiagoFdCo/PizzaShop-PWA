@@ -4,11 +4,17 @@ from sqlalchemy.orm import Session
 
 from app.core.security import decode_access_token
 from app.db.session import get_db
+from app.models.customer import Customer
 from app.models.staff import Staff, StaffRole
 
 # tokenUrl é só documentação pro Swagger (/docs) — o login de verdade é feito
 # via POST /auth/login (JSON), não form-encoded.
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+# Idem, para o login de cliente. auto_error=False porque a maioria das rotas
+# de cliente é opcional (checkout de convidado) — ver deps_customer.py (P3)
+# pra essa versão "opcional"; get_current_customer abaixo é a versão que
+# EXIGE login (nenhuma rota usa ainda, mas fica pronta).
+oauth2_scheme_customer = OAuth2PasswordBearer(tokenUrl="auth/customer/login")
 
 
 def get_current_staff(
@@ -35,6 +41,32 @@ def get_current_staff(
         raise credentials_error
 
     return staff
+
+
+def get_current_customer(
+    token: str = Depends(oauth2_scheme_customer),
+    db: Session = Depends(get_db),
+) -> Customer:
+    """Exige um cliente autenticado (token com claim role=customer). Fase 4 — P1."""
+    credentials_error = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Credenciais inválidas ou expiradas",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    payload = decode_access_token(token)
+    if payload is None or payload.get("role") != "customer":
+        raise credentials_error
+
+    customer_id = payload.get("sub")
+    if customer_id is None:
+        raise credentials_error
+
+    customer = db.get(Customer, customer_id)
+    if customer is None:
+        raise credentials_error
+
+    return customer
 
 
 def require_role(allowed_roles: list[StaffRole]):

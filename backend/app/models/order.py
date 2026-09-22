@@ -9,6 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
 if TYPE_CHECKING:
+    from app.models.customer import Customer
     from app.models.staff import Staff
     from app.models.waiter import RestaurantTable, Tab, OrderRating
 
@@ -76,6 +77,11 @@ class Order(Base):
     customer_name: Mapped[str] = mapped_column(String(120), nullable=False)
     customer_address: Mapped[str] = mapped_column(String(255), nullable=False)
     customer_phone: Mapped[str] = mapped_column(String(30), nullable=False)
+    # Fase 4 (P1): nulo em pedido de convidado (sem login). Quando presente,
+    # é o que permite "último pedido do cliente" (P2) e fidelidade (P3).
+    customer_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("customer.id", ondelete="SET NULL"), nullable=True
+    )
 
     payment_method: Mapped[PaymentMethod] = mapped_column(SAEnum(PaymentMethod, name="payment_method"), nullable=False)
     subtotal: Mapped[float] = mapped_column(Float, nullable=False)
@@ -113,6 +119,7 @@ class Order(Base):
     )
     cook: Mapped["Staff | None"] = relationship(foreign_keys=[cook_id])
     driver: Mapped["Staff | None"] = relationship(foreign_keys=[driver_id])
+    customer: Mapped["Customer | None"] = relationship(foreign_keys=[customer_id])  # Fase 4 — P1
 
     # ── Fase 3 ──────────────────────────────────────────────────────────
     waiter: Mapped["Staff | None"] = relationship(foreign_keys=[waiter_id])

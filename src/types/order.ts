@@ -87,6 +87,7 @@ export interface CustomerInfo {
 export interface Order {
   id: string;
   items: OrderItem[];
+  customerId?: string | null; // Fase 4 (P1): presente quando o pedido foi feito logado
   customer: CustomerInfo;
   paymentMethod: PaymentMethod;
   subtotal: number;
@@ -115,6 +116,7 @@ export type OrderInput = Omit<
   Order,
   | "id" | "status" | "channel" | "tabId" | "createdAt" | "cook" | "driver" | "deliveryFailure" | "items" | "rating"
   | "couponCode" | "couponDiscount" | "loyaltyDiscount" | "pointsRedeemed" | "pointsEarned"
+  | "customerId"
 > & {
   items: CartItem[];
   // Fase 4 (P3): o backend valida e recalcula o total com estes dois campos.

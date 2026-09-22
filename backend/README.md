@@ -63,7 +63,13 @@ backend/app/
 
 ## O que já funciona
 
-- `POST /auth/login` — devolve JWT com `role` embutido
+- `POST /auth/login` — devolve JWT com `role` embutido (staff)
+- `POST /auth/customer/register`, `POST /auth/customer/login` — login/cadastro
+  de cliente com CPF (Fase 4, P1)
+- `POST /orders/{id}/payment`, `GET /orders/{id}/payment` — pagamento real via
+  Mercado Pago (Checkout Pro); `POST /payments/webhook` recebe a confirmação
+  (nunca chamado pelo front) — exige `MP_ACCESS_TOKEN` no `.env`, ver
+  `docs/fase4/P1-pagamento-concreto.md`
 - `GET/PUT /tenant`
 - `GET/POST/PUT/DELETE /products`, `GET /products/{id}/recommendations`
 - `GET/POST /staff` (admin cadastra entregadores pela UI; cozinheiro/garçom

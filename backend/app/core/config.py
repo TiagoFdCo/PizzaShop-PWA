@@ -43,5 +43,16 @@ class Settings(BaseSettings):
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         return value
 
+    # Mercado Pago (Checkout Pro) — Fase 4 (P1): pagamento real. Credenciais
+    # de TESTE (ver docs/fase4/P1-pagamento-concreto.md). Em branco = o
+    # endpoint de pagamento devolve 500 explicando o que falta.
+    MP_ACCESS_TOKEN: str = ""
+    MP_PUBLIC_KEY: str = ""
+    # Pra onde o Mercado Pago redireciona o navegador e chama o webhook de
+    # confirmação. Em dev local, BACKEND_URL precisa ser uma URL pública
+    # (ex. ngrok) pro webhook conseguir chegar.
+    FRONTEND_URL: str = "http://localhost:5173"
+    BACKEND_URL: str = "http://localhost:8000"
+
 
 settings = Settings()
