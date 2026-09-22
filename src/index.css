@@ -21,20 +21,26 @@
   --pizza-radius: 20px;
   --pizza-shadow: 0 18px 50px rgba(58, 29, 19, .10);
 
-  /* P4: semantic UI colors. These are intentionally separate from tenant brand vars. */
-  --ui-bg: #14160f;
-  --ui-surface: #1e2117;
-  --ui-surface-soft: #262a1c;
-  --ui-text: #eef0e6;
-  --ui-text-strong: #f9faf3;
-  --ui-text-muted: #b9bdac;
-  --ui-text-subtle: #8e9280;
-  --ui-border: #35392a;
-  --ui-border-soft: #2a2d20;
-  --ui-input-bg: #1e2117;
-  --ui-input-focus-bg: #262a1c;
-  --ui-hover: #262a1c;
-  --ui-shadow: 0 18px 50px rgba(0,0,0,.32);
+  /* P4: semantic UI colors. These are intentionally separate from tenant brand vars.
+     FIX: estes valores precisam ser os de modo CLARO — é o que :root representa por
+     padrão. Os valores de modo escuro (quase-branco pra texto, quase-preto pro fundo)
+     estavam sentados aqui sem nenhum bloco de modo claro pra sobrescrever, então
+     qualquer texto usando var(--ui-text) (body, .theme-toggle etc.) saía quase
+     invisível no tema claro. Os valores de escuro de verdade já existem, corretos,
+     dentro de html[data-theme="dark"] logo abaixo — não precisam mudar. */
+  --ui-bg: #f8f3ec;
+  --ui-surface: #fffaf4;
+  --ui-surface-soft: #fff6ec;
+  --ui-text: #2a1a15;
+  --ui-text-strong: #1a0f0b;
+  --ui-text-muted: #786b64;
+  --ui-text-subtle: #9c8f87;
+  --ui-border: #eaded2;
+  --ui-border-soft: #f1e8de;
+  --ui-input-bg: #ffffff;
+  --ui-input-focus-bg: #fffaf4;
+  --ui-hover: #f4ece2;
+  --ui-shadow: 0 18px 50px rgba(58,29,19,.10);
 }
 
 * { box-sizing: border-box; }
@@ -426,6 +432,9 @@ html[data-theme="dark"] .product-price-label { color: var(--ui-text-subtle); }
 html[data-theme="dark"] .store-footer { border-color: var(--ui-border); }
 
 @media (prefers-color-scheme: dark) {
-  /* Only acts as a visual fallback before JS sets data-theme. */
+  /* Only acts as a visual fallback before JS sets data-theme (evita flash de
+     controles nativos — scrollbar, inputs — no esquema errado no primeiro
+     frame). O padrão do site é o tema claro; só assume escuro aqui se o
+     sistema operacional do usuário já estiver em modo escuro. */
   html:not([data-theme]) { color-scheme: dark; }
 }
