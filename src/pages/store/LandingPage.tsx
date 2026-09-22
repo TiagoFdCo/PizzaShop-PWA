@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import { MapPin, Clock, Truck, ArrowRight, Flame, Star } from "lucide-react";
 import { useTenantStore } from "../../store/useTenantStore";
+import { RecommendationSection } from "../../components/store/RecommendationSection";
 
 export function LandingPage() {
   const navigate = useNavigate();
@@ -62,6 +63,8 @@ export function LandingPage() {
           </div>
         </section>
       )}
+      
+       <RecommendationSection />
 
       <section className="mx-auto w-[min(1080px,calc(100%-40px))] pb-20">
         <div className="pizza-gradient rounded-[24px] px-7 py-8 shadow-[0_20px_50px_rgba(58,29,19,.14)] md:flex md:items-center md:justify-between md:gap-8 md:px-10">
