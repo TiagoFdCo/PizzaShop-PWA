@@ -1,8 +1,12 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import { applyColorScheme } from "./hooks/useColorScheme";
+import { useColorSchemeStore } from "./store/useColorSchemeStore";
 import "./index.css";
 import "./design.css";
+
+applyColorScheme(useColorSchemeStore.getState().scheme);
 
 const rootElement = document.getElementById("root");
 

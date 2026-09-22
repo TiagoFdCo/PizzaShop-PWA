@@ -2,6 +2,7 @@ import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { LayoutDashboard, Palette, Pizza, ClipboardList, Bike, LogOut, Store, LineChart } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useTenantStore } from "../../store/useTenantStore";
+import { ThemeToggle } from "../ui/ThemeToggle";
 
 const NAV_ITEMS = [
   { to: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -27,9 +28,12 @@ export function AdminLayout() {
     <div className="flex min-h-screen bg-gray-50">
       <aside className="flex w-56 flex-col justify-between border-r border-gray-200 bg-white p-4">
         <div>
-          <p className="px-2 text-sm font-semibold text-gray-400">
-            {tenant?.name ?? "Painel Admin"}
-          </p>
+          <div className="flex items-center justify-between gap-2 px-2">
+            <p className="text-sm font-semibold text-gray-400">
+              {tenant?.name ?? "Painel Admin"}
+            </p>
+            <ThemeToggle compact />
+          </div>
           <Link
             to="/"
             className="mb-6 mt-1 flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-primary hover:bg-primary/10"

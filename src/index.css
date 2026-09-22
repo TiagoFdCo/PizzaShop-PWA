@@ -20,6 +20,21 @@
   --pizza-border: #eaded2;
   --pizza-radius: 20px;
   --pizza-shadow: 0 18px 50px rgba(58, 29, 19, .10);
+
+  /* P4: semantic UI colors. These are intentionally separate from tenant brand vars. */
+  --ui-bg: #14160f;
+  --ui-surface: #1e2117;
+  --ui-surface-soft: #262a1c;
+  --ui-text: #eef0e6;
+  --ui-text-strong: #f9faf3;
+  --ui-text-muted: #b9bdac;
+  --ui-text-subtle: #8e9280;
+  --ui-border: #35392a;
+  --ui-border-soft: #2a2d20;
+  --ui-input-bg: #1e2117;
+  --ui-input-focus-bg: #262a1c;
+  --ui-hover: #262a1c;
+  --ui-shadow: 0 18px 50px rgba(0,0,0,.32);
 }
 
 * { box-sizing: border-box; }
@@ -28,7 +43,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  color: var(--pizza-ink);
+  color: var(--ui-text);
   background:
     radial-gradient(circle at 8% 4%, rgba(211,162,76,.14), transparent 22rem),
     radial-gradient(circle at 92% 18%, rgba(181,47,39,.07), transparent 25rem),
@@ -48,16 +63,16 @@ button:hover { transform: translateY(-1px); }
 button:active { transform: translateY(0); }
 
 input, textarea, select {
-  border: 1px solid var(--pizza-border);
+  border: 1px solid var(--ui-border);
   border-radius: 14px;
-  background: rgba(255,255,255,.92);
-  color: var(--pizza-ink);
+  background: var(--ui-input-bg);
+  color: var(--ui-text);
   transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
 }
 input:focus, textarea:focus, select:focus {
   border-color: rgba(169,40,34,.55);
   box-shadow: 0 0 0 4px rgba(169,40,34,.08);
-  background: #fff;
+  background: var(--ui-input-focus-bg);
 }
 button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
   outline: 3px solid rgba(211,162,76,.55);
@@ -311,3 +326,106 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 #root { min-height: 100vh; }
 html, body, #root { overflow-x: hidden; }
+
+
+/* P4 — global light/dark semantic theme. Tenant brand colors remain untouched. */
+html[data-theme="dark"] {
+  --ui-bg: #171311;
+  --ui-surface: #211b18;
+  --ui-surface-soft: #2a211d;
+  --ui-text: #f6eee8;
+  --ui-text-strong: #fff8f3;
+  --ui-text-muted: #c7b9b0;
+  --ui-text-subtle: #a7968c;
+  --ui-border: #493b34;
+  --ui-border-soft: #3a302b;
+  --ui-input-bg: #211b18;
+  --ui-input-focus-bg: #28201c;
+  --ui-hover: #302621;
+  --ui-shadow: 0 18px 50px rgba(0,0,0,.28);
+}
+
+html[data-theme="dark"] { background-color: var(--ui-bg); color: var(--ui-text); }
+
+/* O seletor acima só troca background-color; o body define um `background`
+   com camadas de gradiente claro (radial + linear) que ficam por cima e
+   continuam visíveis mesmo com --ui-bg escuro. Por isso o fundo precisa do
+   shorthand `background` completo aqui, não apenas background-color. */
+html[data-theme="dark"] body {
+  color: var(--ui-text);
+  background:
+    radial-gradient(circle at 8% 4%, rgba(211,162,76,.08), transparent 22rem),
+    radial-gradient(circle at 92% 18%, rgba(181,47,39,.05), transparent 25rem),
+    var(--ui-bg);
+}
+
+/* Tailwind utility bridge: keeps existing screens dark without touching tenant --color-* vars. */
+html[data-theme="dark"] .bg-gray-50 { background-color: var(--ui-bg) !important; }
+html[data-theme="dark"] .bg-white { background-color: var(--ui-surface) !important; }
+html[data-theme="dark"] .bg-gray-100 { background-color: var(--ui-hover) !important; }
+html[data-theme="dark"] .bg-white\/70 { background-color: rgb(33 27 24 / .70) !important; }
+html[data-theme="dark"] .text-gray-900 { color: var(--ui-text-strong) !important; }
+html[data-theme="dark"] .text-gray-800 { color: var(--ui-text) !important; }
+html[data-theme="dark"] .text-gray-700 { color: var(--ui-text) !important; }
+html[data-theme="dark"] .text-gray-600 { color: var(--ui-text-muted) !important; }
+html[data-theme="dark"] .text-gray-500 { color: var(--ui-text-muted) !important; }
+html[data-theme="dark"] .text-gray-400 { color: var(--ui-text-subtle) !important; }
+html[data-theme="dark"] .border-gray-50 { border-color: var(--ui-border-soft) !important; }
+html[data-theme="dark"] .border-gray-100 { border-color: var(--ui-border-soft) !important; }
+html[data-theme="dark"] .border-gray-200 { border-color: var(--ui-border) !important; }
+html[data-theme="dark"] .border-gray-300 { border-color: #5a4a42 !important; }
+html[data-theme="dark"] .hover\:bg-gray-50:hover { background-color: var(--ui-hover) !important; }
+html[data-theme="dark"] .hover\:bg-gray-100:hover { background-color: #362c27 !important; }
+html[data-theme="dark"] .rounded-xl.border,
+html[data-theme="dark"] .rounded-lg.border { border-color: var(--ui-border); }
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+  background: var(--ui-input-bg);
+  color: var(--ui-text);
+  border-color: var(--ui-border);
+}
+
+html[data-theme="dark"] input:focus,
+html[data-theme="dark"] textarea:focus,
+html[data-theme="dark"] select:focus {
+  background: var(--ui-input-focus-bg);
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 11px;
+  border: 1px solid var(--ui-border);
+  border-radius: 10px;
+  background: var(--ui-surface);
+  color: var(--ui-text-muted);
+  box-shadow: 0 5px 16px rgb(0 0 0 / .06);
+}
+.theme-toggle:hover { background: var(--ui-hover); color: var(--ui-text); }
+.theme-toggle-compact { width: 36px; padding: 0; }
+
+/* Store-specific surfaces */
+html[data-theme="dark"] .store-header {
+  border-color: var(--ui-border);
+  background: rgb(33 27 24 / .88);
+}
+html[data-theme="dark"] .store-nav-link { color: var(--ui-text-muted); }
+html[data-theme="dark"] .store-cart { background: var(--ui-surface); border-color: var(--ui-border); }
+html[data-theme="dark"] .store-cart:hover { background: var(--ui-hover); border-color: #604d42; }
+html[data-theme="dark"] .story-text { color: var(--ui-text-muted); }
+html[data-theme="dark"] .info-card { background: rgb(33 27 24 / .92); border-color: var(--ui-border); box-shadow: var(--ui-shadow); }
+html[data-theme="dark"] .info-icon { background: #3a2a20; }
+html[data-theme="dark"] .product-card-modern { background: var(--ui-surface); border-color: var(--ui-border); box-shadow: var(--ui-shadow); }
+html[data-theme="dark"] .product-image-wrap { background: #382d27; }
+html[data-theme="dark"] .product-price-label { color: var(--ui-text-subtle); }
+html[data-theme="dark"] .store-footer { border-color: var(--ui-border); }
+
+@media (prefers-color-scheme: dark) {
+  /* Only acts as a visual fallback before JS sets data-theme. */
+  html:not([data-theme]) { color-scheme: dark; }
+}

@@ -5,6 +5,7 @@ import { useAuthStore } from "../../store/useAuthStore";
 import { loginSchema, type LoginFormData } from "../../lib/validators";
 import { Input } from "../../components/ui/Input";
 import { Button } from "../../components/ui/Button";
+import { ThemeToggle } from "../../components/ui/ThemeToggle";
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -32,7 +33,10 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-50">
+    <div className="relative flex h-screen items-center justify-center bg-gray-50">
+      <div className="absolute right-4 top-4">
+        <ThemeToggle compact />
+      </div>
       <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-sm space-y-4 rounded-xl border bg-white p-6 shadow-card">
         <div>
           <h1 className="text-xl font-semibold text-gray-800">Painel Admin</h1>
