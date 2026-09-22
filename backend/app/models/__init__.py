@@ -20,6 +20,12 @@ from app.models.waiter import (  # noqa: F401
     OrderRating,
 )
 from app.models.expense import Expense, ExpenseCategory  # noqa: F401
+from app.models.coupon import Coupon, CouponDiscountType  # noqa: F401  (Fase 4 — P3)
+from app.models.loyalty import (  # noqa: F401  (Fase 4 — P3)
+    LoyaltyAccount,
+    LoyaltyTransaction,
+    LoyaltyTransactionType,
+)
 
 __all__ = [
     "Tenant",
@@ -43,4 +49,9 @@ __all__ = [
     "OrderRating",
     "Expense",
     "ExpenseCategory",
+    "Coupon",
+    "CouponDiscountType",
+    "LoyaltyAccount",
+    "LoyaltyTransaction",
+    "LoyaltyTransactionType",
 ]

@@ -16,6 +16,7 @@ from app.crud.order import (
 from app.crud.tenant import get_tenant
 from app.db.session import get_db
 from app.deps import get_current_staff, require_role
+from app.deps_customer import get_optional_customer_id  # Fase 4 — P3
 from app.models.order import Order, OrderItem, OrderStatus
 from app.models.staff import Staff, StaffRole
 from app.schemas.order import (
@@ -113,6 +114,12 @@ def _order_to_out(order: Order) -> OrderOut:
                 else None
             ),
             "rating": order.rating.stars if order.rating else None,
+            # Fase 4 (P3)
+            "coupon_code": order.coupon_code,
+            "coupon_discount": order.coupon_discount or 0,
+            "loyalty_discount": order.loyalty_discount or 0,
+            "points_redeemed": order.points_redeemed or 0,
+            "points_earned": order.points_earned or 0,
         }
     )
 
@@ -166,6 +173,7 @@ def _load_order_with_relations(db: Session, order_id: str) -> Order:
 def add_order(
     data: OrderInput,
     db: Session = Depends(get_db),
+    customer_id: str | None = Depends(get_optional_customer_id),  # Fase 4 — P3
 ) -> OrderOut:
 
     tenant_id = _tenant_id(db)
@@ -175,6 +183,7 @@ def add_order(
             db,
             tenant_id,
             data,
+            customer_id=customer_id,
         )
     except ValueError as error:
         raise _handle_order_error(error) from error

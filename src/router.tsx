@@ -28,6 +28,8 @@ const AdminOrdersManagementPage = lazy(() => import("./pages/admin/OrdersManagem
 const AdminDriversManagementPage = lazy(() => import("./pages/admin/DriversManagementPage").then((m) => ({ default: m.DriversManagementPage })));
 // Corrigido: BiDashboardPage existia pronta mas nunca tinha sido roteada.
 const AdminBiDashboardPage = lazy(() => import("./pages/admin/BiDashboardPage").then((m) => ({ default: m.BiDashboardPage })));
+// Fase 4 (P3): cupons de desconto
+const AdminCouponsManagementPage = lazy(() => import("./pages/admin/CouponsManagementPage").then((m) => ({ default: m.CouponsManagementPage })));
 
 // Cozinha (P2)
 const KitchenOrdersPage = lazy(() => import("./pages/kitchen/KitchenOrdersPage").then((m) => ({ default: m.KitchenOrdersPage })));
@@ -81,6 +83,7 @@ export const router = createBrowserRouter([
                   { path: "pedidos", element: <AdminOrdersManagementPage /> },
                   { path: "entregadores", element: <AdminDriversManagementPage /> },
                   { path: "financeiro", element: <AdminBiDashboardPage /> },
+                  { path: "cupons", element: <AdminCouponsManagementPage /> }, // Fase 4 (P3)
                 ],
               },
             ],

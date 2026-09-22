@@ -82,6 +82,17 @@ class Order(Base):
     delivery_fee: Mapped[float] = mapped_column(Float, nullable=False)
     total: Mapped[float] = mapped_column(Float, nullable=False)
 
+    # ── Fase 4 (P3) — cupom e fidelidade ─────────────────────────────────
+    # Snapshot do que foi aplicado neste pedido. total = subtotal
+    # - coupon_discount - loyalty_discount + delivery_fee (calculado no
+    # backend, em app/crud/discount.py — o front não decide desconto).
+    coupon_code: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    coupon_discount: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    loyalty_discount: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    points_redeemed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    points_earned: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    # ────────────────────────────────────────────────────────────────────
+
     status: Mapped[OrderStatus] = mapped_column(
         SAEnum(OrderStatus, name="order_status"), nullable=False, default=OrderStatus.recebido
     )

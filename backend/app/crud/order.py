@@ -12,6 +12,7 @@ from app.models.order import (
 from app.models.staff import Staff, StaffRole
 from app.models.waiter import OrderRating
 from app.schemas.order import DeliveryFailureInput, OrderInput
+from app.crud.discount import apply_order_discounts  # Fase 4 — P3
 
 
 def _get_order(db: Session, order_id: str) -> Order:
@@ -35,7 +36,7 @@ def _get_order(db: Session, order_id: str) -> Order:
     return order
 
 
-def create_order(db: Session, tenant_id: str, data: OrderInput) -> Order:
+def create_order(db: Session, tenant_id: str, data: OrderInput, customer_id: str | None = None) -> Order:
     order = Order(
         tenant_id=tenant_id,
         customer_name=data.customer.name,
@@ -74,6 +75,20 @@ def create_order(db: Session, tenant_id: str, data: OrderInput) -> Order:
             )
 
             db.add(topping)
+
+    # Fase 4 (P3): cupom + pontos. Recalcula order.total. Se alguma regra
+    # falhar, lança ValueError antes do commit e nada é gravado.
+    try:
+        apply_order_discounts(
+            db,
+            order,
+            coupon_code=data.coupon_code,
+            redeem_points=data.redeem_points,
+            customer_id=customer_id,
+        )
+    except ValueError:
+        db.rollback()
+        raise
 
     db.commit()
 
