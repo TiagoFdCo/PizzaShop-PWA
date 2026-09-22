@@ -8,6 +8,7 @@ from app.routers import reports
 
 from app.core.config import settings
 from app.routers import auth, expenses, orders, products, reports, staff, tables, tabs, tenant, uploads
+from app.routers import coupons, loyalty  # Fase 4 — P3
 
 
 Path("static/uploads").mkdir(parents=True, exist_ok=True)
@@ -34,6 +35,8 @@ app.include_router(reports.router)    # ← Issue #75: relatórios financeiros +
 app.include_router(tables.router)     # ← Issue #70: mesas (presencial)
 app.include_router(tabs.router)       # ← Issue #70: comandas (presencial)
 app.include_router(expenses.router)   # ← Financeiro: despesas administrativas
+app.include_router(coupons.router)    # ← Fase 4 (P3): cupons de desconto
+app.include_router(loyalty.router)    # ← Fase 4 (P3): fidelidade
 
 
 @app.get("/health", tags=["health"])

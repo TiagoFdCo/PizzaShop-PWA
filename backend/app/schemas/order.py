@@ -68,7 +68,10 @@ class OrderInput(CamelModel):
     payment_method: PaymentMethod
     subtotal: float
     delivery_fee: float
-    total: float
+    total: float  # informativo: o backend recalcula com os descontos
+    # Fase 4 (P3): opcionais — pedido sem cupom/pontos continua igual.
+    coupon_code: str | None = None
+    redeem_points: int = Field(default=0, ge=0)
 
 
 class DispatchInput(CamelModel):
@@ -98,3 +101,10 @@ class OrderOut(CamelModel):
     driver: StaffRef | None = None
     delivery_failure: DeliveryFailureOut | None = None
     rating: int | None = None
+
+    # Fase 4 (P3)
+    coupon_code: str | None = None
+    coupon_discount: float = 0
+    loyalty_discount: float = 0
+    points_redeemed: int = 0
+    points_earned: int = 0

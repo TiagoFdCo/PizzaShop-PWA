@@ -42,6 +42,9 @@ export async function createOrder(input: OrderInput): Promise<Order> {
     subtotal: input.subtotal,
     deliveryFee: input.deliveryFee,
     total: input.total,
+    // Fase 4 (P3)
+    couponCode: input.couponCode ?? null,
+    redeemPoints: input.redeemPoints ?? 0,
   };
 
   return apiFetch<Order>(ENDPOINT, {

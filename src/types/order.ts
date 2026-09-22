@@ -101,11 +101,23 @@ export interface Order {
   driver: OrderStaffRef | null;
   deliveryFailure?: DeliveryFailure;
   rating: number | null;
+
+  // Fase 4 (P3) — cupom e fidelidade. Opcionais pra não quebrar mocks/testes
+  // antigos; o backend sempre devolve (0/null quando não houve desconto).
+  couponCode?: string | null;
+  couponDiscount?: number;
+  loyaltyDiscount?: number;
+  pointsRedeemed?: number;
+  pointsEarned?: number;
 }
 
 export type OrderInput = Omit<
   Order,
-  "id" | "status" | "channel" | "tabId" | "createdAt" | "cook" | "driver" | "deliveryFailure" | "items" | "rating"
+  | "id" | "status" | "channel" | "tabId" | "createdAt" | "cook" | "driver" | "deliveryFailure" | "items" | "rating"
+  | "couponCode" | "couponDiscount" | "loyaltyDiscount" | "pointsRedeemed" | "pointsEarned"
 > & {
   items: CartItem[];
+  // Fase 4 (P3): o backend valida e recalcula o total com estes dois campos.
+  couponCode?: string | null;
+  redeemPoints?: number;
 };
