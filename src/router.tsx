@@ -18,6 +18,9 @@ const CartPage = lazy(() => import("./pages/store/CartPage").then((m) => ({ defa
 const CheckoutPage = lazy(() => import("./pages/store/CheckoutPage").then((m) => ({ default: m.CheckoutPage })));
 const PaymentPage = lazy(() => import("./pages/store/PaymentPage").then((m) => ({ default: m.PaymentPage })));
 const OrderTrackingPage = lazy(() => import("./pages/store/OrderTrackingPage").then((m) => ({ default: m.OrderTrackingPage })));
+// Fase 4 (P1): login/cadastro de cliente
+const CustomerLoginPage = lazy(() => import("./pages/store/CustomerLoginPage").then((m) => ({ default: m.CustomerLoginPage })));
+const CustomerRegisterPage = lazy(() => import("./pages/store/CustomerRegisterPage").then((m) => ({ default: m.CustomerRegisterPage })));
 
 // Admin
 const AdminLoginPage = lazy(() => import("./pages/admin/LoginPage").then((m) => ({ default: m.LoginPage })));
@@ -64,6 +67,8 @@ export const router = createBrowserRouter([
           { path: "/checkout", element: <CheckoutPage /> },
           { path: "/pagamento", element: <PaymentPage /> },
           { path: "/pedido/:id", element: <OrderTrackingPage /> },
+          { path: "/conta/entrar", element: <CustomerLoginPage /> },
+          { path: "/conta/cadastro", element: <CustomerRegisterPage /> },
         ],
       },
       // Admin

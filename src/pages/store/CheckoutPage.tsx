@@ -5,6 +5,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useCartStore } from "../../store/useCartStore";
 import { useTenantStore } from "../../store/useTenantStore";
 import { useOrderStore } from "../../store/useOrderStore";
+import { useCustomerAuthStore } from "../../store/useCustomerAuthStore";
 import { checkoutSchema, type CheckoutFormData } from "../../lib/validators";
 import { formatCurrency } from "../../lib/formatCurrency";
 import { Input } from "../../components/ui/Input";
@@ -23,6 +24,9 @@ export function CheckoutPage() {
   const { items, subtotal } = useCartStore();
   const tenant = useTenantStore((state) => state.tenant);
   const { placeOrder, loading, error } = useOrderStore();
+  // Fase 4 (P1) — cliente logado: pré-preenche nome/telefone e habilita a
+  // seção de fidelidade acima (getMyLoyalty só devolve algo com token válido).
+  const customerSession = useCustomerAuthStore((state) => state.session);
 
   const enabledMethods = tenant?.enabledPaymentMethods ?? [];
   const deliveryFee = tenant?.deliveryFee ?? 0;
@@ -60,7 +64,12 @@ export function CheckoutPage() {
     formState: { errors },
   } = useForm<CheckoutFormData>({
     resolver: zodResolver(checkoutSchema),
-    defaultValues: { paymentMethod: enabledMethods[0] },
+    defaultValues: {
+      paymentMethod: enabledMethods[0],
+      // Fase 4 (P1)
+      name: customerSession?.customer.name ?? "",
+      phone: customerSession?.customer.phone ?? "",
+    },
   });
 
   useEffect(() => {
@@ -93,6 +102,15 @@ export function CheckoutPage() {
   return (
     <div className="mx-auto max-w-2xl p-4">
       <h1 className="text-2xl font-bold text-gray-900 mb-4">Checkout</h1>
+
+      {!customerSession && (
+        <p className="mb-4 text-sm text-gray-500">
+          <Link to="/conta/entrar" className="text-primary hover:underline">
+            Entrar na sua conta
+          </Link>{" "}
+          para acompanhar seus pedidos e aproveitar vantagens exclusivas.
+        </p>
+      )}
 
       <div className="card mb-6">
         <h2 className="font-semibold text-gray-800 mb-2">Resumo do pedido</h2>

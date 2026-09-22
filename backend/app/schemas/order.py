@@ -87,6 +87,7 @@ class OrderRatingInput(CamelModel):
 class OrderOut(CamelModel):
     id: str
     items: list[OrderItemOut]
+    customer_id: str | None = None  # Fase 4 (P1): presente quando o pedido foi feito logado
     customer: CustomerInfo
     payment_method: PaymentMethod
     subtotal: float

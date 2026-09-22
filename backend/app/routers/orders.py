@@ -54,6 +54,7 @@ def _order_to_out(order: Order) -> OrderOut:
     return OrderOut.model_validate(
         {
             "id": order.id,
+            "customer_id": order.customer_id,  # Fase 4 — P1
             "items": [
                 {
                     "id": item.id,
