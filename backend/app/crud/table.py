@@ -5,6 +5,7 @@ Convenção de erro (a rota traduz):
   - raise ConflictError -> violação de regra (409)
 """
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from app.models.order import Order, OrderChannel, OrderItem, OrderItemTopping, OrderStatus, PaymentMethod
@@ -72,22 +73,51 @@ def _get_tab(db: Session, tab_id: str, tenant_id: str) -> Tab | None:
     return tab
 
 
+_TAB_LABELS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+
+def _next_tab_label(db: Session, table_id: str) -> str:
+    """Primeira letra livre (A, B, C...) entre as comandas ATIVAS da mesa.
+
+    Ativa = aberta ou fechada (fechada = aguardando pagamento, ainda ocupa a
+    mesa). Quando uma comanda é paga, a letra dela volta a ficar disponível.
+    """
+    used = set(
+        db.scalars(
+            select(Tab.label).where(
+                Tab.table_id == table_id,
+                Tab.status.in_([TabStatus.aberta, TabStatus.fechada]),
+                Tab.label.is_not(None),
+            )
+        ).all()
+    )
+    for letter in _TAB_LABELS:
+        if letter not in used:
+            return letter
+    raise ConflictError("A mesa atingiu o limite de 26 comandas ativas.")
+
+
 def open_tab(db: Session, tenant_id: str, table_id: str, waiter_id: str) -> Tab | None:
-    table = db.get(RestaurantTable, table_id)
+    table = db.get(RestaurantTable, table_id, with_for_update=True)
     if table is None or table.tenant_id != tenant_id:
         return None  # 404: mesa não existe
 
-    # REGRA (D7 / MVP): só uma comanda 'aberta' por mesa
-    open_exists = db.scalar(
-        select(Tab).where(Tab.table_id == table_id, Tab.status == TabStatus.aberta)
+    tab = Tab(
+        tenant_id=tenant_id,
+        table_id=table_id,
+        label=_next_tab_label(db, table_id),
+        waiter_id=waiter_id,
+        status=TabStatus.aberta,
+        total=0.0,
     )
-    if open_exists is not None:
-        raise ConflictError("Mesa já tem uma comanda aberta.")
-
-    tab = Tab(tenant_id=tenant_id, table_id=table_id, waiter_id=waiter_id, status=TabStatus.aberta, total=0.0)
     db.add(tab)
     table.status = TableStatus.ocupada
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        # Rede de segurança: o índice único parcial barrou uma letra repetida.
+        db.rollback()
+        raise ConflictError("Outra comanda foi aberta nesta mesa ao mesmo tempo. Tente de novo.")
     return _get_tab(db, tab.id, tenant_id)
 
 
@@ -203,11 +233,6 @@ def pay_tab(db: Session, tenant_id: str, tab_id: str) -> Tab | None:
     if tab.closed_at is None:
         tab.closed_at = datetime.now(timezone.utc)
 
-    # Corrigido: pagar a comanda é o sinal real de venda concluída pro
-    # presencial — não pode depender de alguém ter clicado "Servir na mesa"
-    # na cozinha pra cada item. Sem isso, o pedido ficava parado em
-    # "recebido"/"preparo" pra sempre e o financeiro (que só soma pedidos
-    # com status "entregue") nunca contava o dinheiro das mesas.
     for order in tab.orders:
         if order.status != OrderStatus.entregue:
             order.status = OrderStatus.entregue

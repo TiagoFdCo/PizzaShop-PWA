@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { AlertCircle, ArrowLeft, Receipt } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { listTabs } from "../../services/tabService";
+import { tabName } from "../../lib/tabLabel";
 import { formatCurrency } from "../../lib/formatCurrency";
 import type { Tab, TabStatus } from "../../types/tab";
 
@@ -89,7 +90,7 @@ export function TableHistoryPage() {
               className="flex w-full items-center justify-between rounded-xl border border-gray-200 bg-white p-4 text-left shadow-sm transition hover:border-primary/40 hover:shadow-md"
             >
               <div>
-                <p className="font-mono text-xs text-gray-400">#{tab.id.slice(0, 8)}</p>
+                <p className="font-mono text-xs text-gray-400">{tab.label ? `${tabName(tab)} · ` : ""}#{tab.id.slice(0, 8)}</p>
                 <p className="mt-1 text-sm text-gray-600">
                   Aberta em {new Date(tab.openedAt).toLocaleString("pt-BR")}
                   {tab.closedAt && ` · Fechada em ${new Date(tab.closedAt).toLocaleString("pt-BR")}`}

@@ -5,6 +5,7 @@ import { TableCard } from "../../components/garcom/TableCard";
 import { listTables } from "../../services/tableService";
 import { openTab, listTabs } from "../../services/tabService";
 import { useAuthStore } from "../../store/useAuthStore";
+import type { Tab } from "../../types/tab";
 import type { Table } from "../../types/table";
 
 export function TablesPage() {
@@ -13,10 +14,7 @@ export function TablesPage() {
   const session = useAuthStore((state) => state.session);
 
   const [tables, setTables] = useState<Table[]>([]);
-  // Corrigido (bug: comanda aberta ficava inacessível depois de sair da
-  // tela): mapa mesa -> id da comanda ABERTA daquela mesa, pra "Ver
-  // comanda" navegar direto pra ela em vez de só saber abrir uma nova.
-  const [openTabByTable, setOpenTabByTable] = useState<Record<string, string>>({});
+  const [activeTabsByTable, setActiveTabsByTable] = useState<Record<string, Tab[]>>({});
   const [loading, setLoading] = useState(true);
   const [openingTableId, setOpeningTableId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -26,14 +24,26 @@ export function TablesPage() {
       setLoading(true);
       setError(null);
 
-      const [tablesData, openTabs] = await Promise.all([
+      const [tablesData, openTabs, closedTabs] = await Promise.all([
         listTables(),
         listTabs({ status: "aberta" }),
+        listTabs({ status: "fechada" }),
       ]);
       setTables(tablesData);
-      setOpenTabByTable(
-        Object.fromEntries(openTabs.map((tab) => [tab.tableId, tab.id]))
-      );
+
+      const grouped: Record<string, Tab[]> = {};
+      for (const tab of [...openTabs, ...closedTabs]) {
+        if (!grouped[tab.tableId]) grouped[tab.tableId] = [];
+        grouped[tab.tableId].push(tab);
+      }
+      for (const list of Object.values(grouped)) {
+        list.sort(
+          (a, b) =>
+            (a.label ?? "").localeCompare(b.label ?? "") ||
+            a.openedAt.localeCompare(b.openedAt)
+        );
+      }
+      setActiveTabsByTable(grouped);
     } catch (err) {
       setError(
         err instanceof Error
@@ -74,15 +84,8 @@ export function TablesPage() {
     }
   }
 
-  function handleViewTab(table: Table) {
-    const tabId = openTabByTable[table.id];
-    if (!tabId) {
-      setError(
-        `A mesa ${table.number} está ocupada mas não encontrei a comanda aberta dela — atualize a página.`
-      );
-      return;
-    }
-    navigate(`/garcom/comanda/${tabId}`);
+  function handleViewTab(tab: Tab) {
+    navigate(`/garcom/comanda/${tab.id}`);
   }
 
   function handleViewHistory(table: Table) {
@@ -102,7 +105,7 @@ export function TablesPage() {
           </div>
 
           <p className="mt-1 text-sm text-gray-500">
-            Selecione uma mesa livre para abrir uma comanda.
+            Abra uma comanda numa mesa ou continue uma já aberta. Uma mesa pode ter várias comandas.
           </p>
         </div>
 
@@ -144,6 +147,7 @@ export function TablesPage() {
             <TableCard
               key={table.id}
               table={table}
+              tabs={activeTabsByTable[table.id] ?? []}
               onOpenTab={handleOpenTab}
               onViewTab={handleViewTab}
               onViewHistory={handleViewHistory}

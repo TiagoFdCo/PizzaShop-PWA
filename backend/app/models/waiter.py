@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Enum as SAEnum, Float, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import DateTime, Enum as SAEnum, Float, ForeignKey, Index, Integer, String, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -48,10 +48,20 @@ class RestaurantTable(Base):
 
 class Tab(Base):
     __tablename__ = "tab"
+    __table_args__ = (
+        Index(
+            "uq_tab_active_label_per_table",
+            "table_id",
+            "label",
+            unique=True,
+            postgresql_where=text("label IS NOT NULL AND status IN ('aberta', 'fechada')"),
+        ),
+    )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     tenant_id: Mapped[str] = mapped_column(String(36), ForeignKey("tenant.id", ondelete="CASCADE"), nullable=False)
     table_id: Mapped[str] = mapped_column(String(36), ForeignKey("restaurant_table.id"), nullable=False)
+    label: Mapped[str | None] = mapped_column(String(20), nullable=True)  # "A", "B"... (NULL = comanda anterior à Fase 4)
     waiter_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("staff.id"), nullable=True)
     status: Mapped[TabStatus] = mapped_column(
         SAEnum(TabStatus, name="tab_status"), nullable=False, default=TabStatus.aberta

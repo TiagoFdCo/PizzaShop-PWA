@@ -243,3 +243,50 @@ class TestFinancialDashboard:
             assert res.status_code in (401, 403), (
                 f"GET {path} deveria exigir auth, recebido {res.status_code}"
             )
+
+
+
+# ─── d) Fase 4 — múltiplas comandas por mesa ──────────────────────────────────
+
+class TestMultiplasComandas:
+    """1 mesa : N comandas ativas, com letra (A, B, ...) por comanda."""
+
+    @staticmethod
+    def _table_status(auth_headers: dict, table_id: str) -> str:
+        res = CLIENT.get("/tables", headers=auth_headers)
+        assert res.status_code == 200
+        return next(t["status"] for t in res.json() if t["id"] == table_id)
+
+    def test_duas_comandas_na_mesma_mesa_e_reuso_de_letra(self, auth_headers: dict) -> None:
+        import random
+
+        # Mesa nova (número alto e aleatório) para não depender do seed.
+        res = CLIENT.post("/tables", json={"number": random.randint(9000, 9999), "seats": 4}, headers=auth_headers)
+        assert res.status_code == 201, res.text
+        table_id = res.json()["id"]
+
+        # 1ª e 2ª comanda na MESMA mesa — antes da Fase 4 a 2ª dava 409.
+        a = CLIENT.post("/tabs", json={"tableId": table_id}, headers=auth_headers)
+        b = CLIENT.post("/tabs", json={"tableId": table_id}, headers=auth_headers)
+        assert a.status_code == 201, a.text
+        assert b.status_code == 201, b.text
+        assert (a.json()["label"], b.json()["label"]) == ("A", "B")
+        assert self._table_status(auth_headers, table_id) == "ocupada"
+
+        # Pagar a A: a mesa continua ocupada (B segue ativa) e a letra A fica livre.
+        assert CLIENT.patch(f"/tabs/{a.json()['id']}/pay", headers=auth_headers).status_code == 200
+        assert self._table_status(auth_headers, table_id) == "ocupada"
+
+        c = CLIENT.post("/tabs", json={"tableId": table_id}, headers=auth_headers)
+        assert c.status_code == 201, c.text
+        assert c.json()["label"] == "A"
+
+        # Só libera a mesa quando NÃO sobra comanda ativa.
+        assert CLIENT.patch(f"/tabs/{b.json()['id']}/pay", headers=auth_headers).status_code == 200
+        assert self._table_status(auth_headers, table_id) == "ocupada"
+        assert CLIENT.patch(f"/tabs/{c.json()['id']}/pay", headers=auth_headers).status_code == 200
+        assert self._table_status(auth_headers, table_id) == "livre"
+
+    def test_abrir_comanda_em_mesa_inexistente_da_404(self, auth_headers: dict) -> None:
+        res = CLIENT.post("/tabs", json={"tableId": "nao-existe"}, headers=auth_headers)
+        assert res.status_code == 404
